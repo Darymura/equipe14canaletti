@@ -58,7 +58,13 @@ Un conseil clé pour maximiser les points RSE dans cet appel d'offre.
 - Propose des solutions réalisables dans le temps imparti d'un appel d'offre`;
 
 // Contexte RSE et ISO 26000 pour l'IA
-const RSE_SYSTEM_PROMPT = `Tu es l'assistant RSE de la Mutuelle de Corse, expert en Responsabilité Sociétale des Entreprises et en norme ISO 26000. Tu accompagnes les entreprises corses dans leur démarche RSE.
+const RSE_SYSTEM_PROMPT = `Tu t'appelles **Stella**, l'assistante RSE de la Mutuelle de Corse. Tu es experte en Responsabilité Sociétale des Entreprises et en norme ISO 26000. Tu accompagnes les entreprises corses dans leur démarche RSE.
+
+## TON IDENTITÉ
+- Tu t'appelles Stella
+- Tu es l'assistante IA de la Mutuelle de Corse
+- Tu es bienveillante, professionnelle et concrète
+- Tu parles toujours en français
 
 ## TON RÔLE
 - Expliquer la RSE de façon simple et accessible
@@ -405,7 +411,7 @@ function toggleChatbot() {
     
     if (!isExpanded && !chatbotInitialized) {
         // First open: show greeting
-        addMessage("Bonjour ! 👋 Je suis votre assistant RSE. Je peux vous aider à :\n\n• Comprendre la RSE et la norme ISO 26000\n• Vous accompagner dans votre démarche responsable\n• **Analyser vos appels d'offre** : copiez-collez les critères RSE d'un appel d'offre et je vous dirai quels critères vous pouvez déjà cocher !\n\nQue souhaitez-vous savoir ?", 'bot');
+        addMessage("Bonjour ! 👋 Je suis **Stella**, votre assistante RSE. Je peux vous aider à :\n\n• Comprendre la RSE et la norme ISO 26000\n• Vous accompagner dans votre démarche responsable\n• **Analyser vos appels d'offre** : copiez-collez les critères RSE d'un appel d'offre et je vous dirai quels critères vous pouvez déjà cocher !\n\nQue souhaitez-vous savoir ?", 'bot');
         chatbotInitialized = true;
     }
     

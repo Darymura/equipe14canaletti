@@ -1792,6 +1792,21 @@ ul, ol {
     transition: all var(--transition-fast);
 }
 
+/* Stella logo styles */
+.stella-logo {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+    border-radius: 50%;
+}
+
+.stella-avatar {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 50%;
+}
+
 .chatbot-close {
     display: none;
     color: white;
