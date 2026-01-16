@@ -734,7 +734,20 @@ async function analyzeUploadedDocument() {
     } catch (error) {
         hideTyping();
         console.error('Document analysis error:', error);
-        addMessage("⚠️ Erreur lors de l'analyse du document. Veuillez réessayer ou essayer avec une image du document.", 'bot');
+        addMessage(`⚠️ **Erreur lors de l'analyse du document.**
+
+Cela peut être dû à :
+- Une image trop grande ou de mauvaise qualité
+- Un format non supporté
+- Une surcharge temporaire du service
+
+### Alternatives :
+1. **Réessayez** avec une image plus petite ou plus nette
+2. **Décrivez-moi** le contenu de votre appel d'offre dans le chat
+3. **Copiez-collez** les sections RSE du document
+
+Je reste disponible pour vous aider ! 💬`, 'bot');
+        clearUploadedFile();
     }
 }
 
@@ -810,41 +823,83 @@ Dites-moi :
 
 // Analyze image document using vision API
 async function analyzeImageDocument() {
-    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${GROQ_API_KEY}`,
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            model: 'llama-3.2-90b-vision-preview',
-            messages: [
-                {
-                    role: 'user',
-                    content: [
-                        {
-                            type: 'text',
-                            text: APPEL_OFFRE_ANALYSIS_PROMPT + "\n\nAnalyse cette image d'appel d'offre et identifie tous les critères RSE mentionnés. Si l'image n'est pas lisible ou ne contient pas d'appel d'offre, indique-le clairement."
-                        },
-                        {
-                            type: 'image_url',
-                            image_url: {
-                                url: `data:${uploadedFile.type};base64,${uploadedFileBase64}`
-                            }
-                        }
-                    ]
-                }
-            ],
-            temperature: 0.3,
-            max_tokens: 2048
-        })
-    });
+    // Try multiple vision models in case one is unavailable
+    const visionModels = [
+        'llama-3.2-90b-vision-preview',
+        'llama-3.2-11b-vision-preview',
+        'llava-v1.5-7b-4096-preview'
+    ];
     
-    if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error?.message || 'Vision API request failed');
+    let lastError = null;
+    
+    for (const model of visionModels) {
+        try {
+            console.log(`Trying vision model: ${model}`);
+            const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${GROQ_API_KEY}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    model: model,
+                    messages: [
+                        {
+                            role: 'user',
+                            content: [
+                                {
+                                    type: 'text',
+                                    text: APPEL_OFFRE_ANALYSIS_PROMPT + "\n\nAnalyse cette image d'appel d'offre et identifie tous les critères RSE mentionnés. Si l'image n'est pas lisible ou ne contient pas d'appel d'offre, indique-le clairement."
+                                },
+                                {
+                                    type: 'image_url',
+                                    image_url: {
+                                        url: `data:${uploadedFile.type};base64,${uploadedFileBase64}`
+                                    }
+                                }
+                            ]
+                        }
+                    ],
+                    temperature: 0.3,
+                    max_tokens: 2048
+                })
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                return data.choices[0].message.content;
+            } else {
+                const errorData = await response.json();
+                lastError = errorData.error?.message || `Model ${model} failed`;
+                console.warn(`Model ${model} failed:`, lastError);
+            }
+        } catch (e) {
+            lastError = e.message;
+            console.warn(`Error with model ${model}:`, e);
+        }
     }
     
-    const data = await response.json();
-    return data.choices[0].message.content;
+    // If all vision models fail, provide fallback
+    console.error('All vision models failed. Last error:', lastError);
+    return `⚠️ **L'analyse d'image n'est pas disponible actuellement.**
+
+En attendant, voici comment je peux vous aider :
+
+### Option 1 : Décrivez-moi l'appel d'offre
+Copiez-collez ou décrivez les sections suivantes :
+- Les critères d'attribution et leur pondération
+- Les clauses RSE/environnementales mentionnées
+- Le type de marché (travaux, services, fournitures)
+
+### Option 2 : Posez-moi des questions
+Demandez-moi par exemple :
+- "Quels critères RSE sont généralement demandés dans les appels d'offre BTP ?"
+- "Comment améliorer mon score RSE pour un marché public ?"
+
+### Critères RSE courants dans les appels d'offre :
+📌 **Environnement** (5-10% de la note) : Bilan carbone, gestion déchets, énergies renouvelables
+📌 **Social** (5-10%) : Insertion, formation, sécurité au travail
+📌 **Gouvernance** : Charte éthique, achats responsables
+
+💡 Je reste disponible pour vous conseiller !`;
 }
