@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Quiz RSE interactif - Évaluez la maturité RSE de votre entreprise corse en 5 minutes">
+    <title>Quiz RSE | Mutuelle de Corse</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Skip link pour l'accessibilité -->
+    <a href="#main-content" class="skip-link">Aller au contenu principal</a>
+    
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <nav class="nav" aria-label="Navigation principale">
+                <a href="index.html" class="logo" aria-label="Mutuelle de Corse - Accueil">
+                    <img src="mutuelle-corse-logo.png" alt="Mutuelle de Corse" class="logo-img">
+                    <div class="logo-text">
+                        <span class="logo-title">Mutuelle de Corse</span>
+                        <span class="logo-subtitle">Engagement RSE</span>
+                    </div>
+                </a>
+                <button class="nav-toggle" aria-expanded="false" aria-controls="nav-menu" aria-label="Ouvrir le menu">
+                    <span class="hamburger"></span>
+                </button>
+                <ul class="nav-menu" id="nav-menu">
+                    <li><a href="index.html" class="nav-link">Comprendre la RSE</a></li>
+                    <li><a href="iso26000.html" class="nav-link">Norme ISO 26000</a></li>
+                    <li><a href="quiz.html" class="nav-link nav-link-cta active" aria-current="page">Évaluer mon entreprise</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main id="main-content" class="quiz-page">
+        <div class="container">
+            <!-- Quiz Container -->
+            <div id="quiz-container" class="quiz-container">
+                <!-- Intro Screen -->
+                <div id="quiz-intro" class="quiz-intro">
+                    <div class="quiz-intro-content">
+                        <div class="quiz-intro-icon">📊</div>
+                        <h1>Évaluez votre maturité RSE</h1>
+                        <p class="quiz-intro-subtitle">Ce diagnostic rapide basé sur les 7 questions centrales de l'ISO 26000 vous permettra d'identifier vos points forts et axes d'amélioration.</p>
+                        
+                        <div class="quiz-intro-features">
+                            <div class="intro-feature">
+                                <span class="feature-icon">⏱️</span>
+                                <div>
+                                    <strong>5 minutes</strong>
+                                    <span>21 questions rapides</span>
+                                </div>
+                            </div>
+                            <div class="intro-feature">
+                                <span class="feature-icon">📋</span>
+                                <div>
+                                    <strong>ISO 26000</strong>
+                                    <span>Basé sur la norme</span>
+                                </div>
+                            </div>
+                            <div class="intro-feature">
+                                <span class="feature-icon">📄</span>
+                                <div>
+                                    <strong>Rapport PDF</strong>
+                                    <span>Téléchargeable</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Company Info Form -->
+                        <form id="company-form" class="company-form">
+                            <h2>Informations sur votre entreprise</h2>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="company-name">Nom de l'entreprise *</label>
+                                    <input type="text" id="company-name" name="companyName" required placeholder="Ex: Mon Entreprise SARL">
+                                </div>
+                                <div class="form-group">
+                                    <label for="company-sector">Secteur d'activité *</label>
+                                    <select id="company-sector" name="companySector" required>
+                                        <option value="">Sélectionnez...</option>
+                                        <option value="commerce">Commerce / Distribution</option>
+                                        <option value="tourisme">Tourisme / Hôtellerie / Restauration</option>
+                                        <option value="batiment">BTP / Construction</option>
+                                        <option value="services">Services aux entreprises</option>
+                                        <option value="artisanat">Artisanat</option>
+                                        <option value="agriculture">Agriculture / Agroalimentaire</option>
+                                        <option value="industrie">Industrie / Production</option>
+                                        <option value="sante">Santé / Social</option>
+                                        <option value="transport">Transport / Logistique</option>
+                                        <option value="numerique">Numérique / Tech</option>
+                                        <option value="autre">Autre</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="company-size">Nombre de salariés *</label>
+                                    <select id="company-size" name="companySize" required>
+                                        <option value="">Sélectionnez...</option>
+                                        <option value="1-9">1 à 9 salariés (TPE)</option>
+                                        <option value="10-49">10 à 49 salariés (PE)</option>
+                                        <option value="50-249">50 à 249 salariés (ME)</option>
+                                        <option value="250+">250 salariés et plus (GE)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="company-location">Localisation en Corse</label>
+                                    <select id="company-location" name="companyLocation">
+                                        <option value="">Sélectionnez...</option>
+                                        <option value="ajaccio">Ajaccio et environs</option>
+                                        <option value="bastia">Bastia et environs</option>
+                                        <option value="porto-vecchio">Porto-Vecchio</option>
+                                        <option value="calvi">Calvi / Balagne</option>
+                                        <option value="corte">Corte / Centre Corse</option>
+                                        <option value="autre">Autre</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                Commencer le diagnostic →
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Quiz Questions -->
+                <div id="quiz-questions" class="quiz-questions" hidden>
+                    <div class="quiz-header">
+                        <div class="quiz-progress">
+                            <div class="progress-bar">
+                                <div id="progress-fill" class="progress-fill" style="width: 0%"></div>
+                            </div>
+                            <div class="progress-text">
+                                <span>Question <span id="current-question">1</span>/21</span>
+                                <span id="progress-category" class="progress-category">Gouvernance</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="question-container" class="question-container">
+                        <!-- Questions will be inserted here by JS -->
+                    </div>
+
+                    <div class="quiz-navigation">
+                        <button type="button" id="btn-prev" class="btn btn-secondary" disabled>
+                            ← Précédent
+                        </button>
+                        <button type="button" id="btn-next" class="btn btn-primary" disabled>
+                            Suivant →
+                        </button>
+                        <button type="button" id="btn-submit" class="btn btn-primary" hidden>
+                            Voir mes résultats →
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Quiz Results -->
+                <div id="quiz-results" class="quiz-results" hidden>
+                    <div class="results-header">
+                        <div class="results-score-circle">
+                            <svg viewBox="0 0 36 36" class="circular-chart">
+                                <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                <path id="circle-progress" class="circle" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                            </svg>
+                            <div class="score-text">
+                                <span id="score-value" class="score-value">0</span>
+                                <span class="score-unit">/ 100</span>
+                            </div>
+                        </div>
+                        <div class="results-title">
+                            <h1>Votre diagnostic RSE</h1>
+                            <p id="company-name-display" class="company-display"></p>
+                            <div id="maturity-level" class="maturity-badge"></div>
+                        </div>
+                    </div>
+
+                    <div class="results-summary">
+                        <h2>📊 Synthèse par thématique ISO 26000</h2>
+                        <div id="categories-chart" class="categories-chart">
+                            <!-- Category bars will be inserted here -->
+                        </div>
+                    </div>
+
+                    <div class="results-details">
+                        <h2>📋 Analyse détaillée</h2>
+                        <div id="results-cards" class="results-cards">
+                            <!-- Detail cards will be inserted here -->
+                        </div>
+                    </div>
+
+                    <div class="results-recommendations">
+                        <h2>🎯 Recommandations prioritaires</h2>
+                        <div id="recommendations-list" class="recommendations-list">
+                            <!-- Recommendations will be inserted here -->
+                        </div>
+                    </div>
+
+                    <div class="results-next-steps">
+                        <h2>🚀 Prochaines étapes</h2>
+                        <div class="next-steps-grid">
+                            <div class="next-step-card">
+                                <span class="step-icon">📥</span>
+                                <h3>Téléchargez votre rapport</h3>
+                                <p>Conservez une trace de votre diagnostic et partagez-le avec vos équipes.</p>
+                                <button id="btn-download-pdf" class="btn btn-secondary">
+                                    Télécharger en PDF
+                                </button>
+                            </div>
+                            <div class="next-step-card">
+                                <span class="step-icon">📞</span>
+                                <h3>Contactez un conseiller</h3>
+                                <p>La Mutuelle de Corse vous accompagne dans votre démarche RSE.</p>
+                                <a href="mailto:rse@mutuelle-corse.fr" class="btn btn-primary">
+                                    Prendre rendez-vous
+                                </a>
+                            </div>
+                            <div class="next-step-card">
+                                <span class="step-icon">📚</span>
+                                <h3>Approfondissez</h3>
+                                <p>Découvrez les ressources pour aller plus loin dans votre démarche.</p>
+                                <a href="iso26000.html" class="btn btn-secondary">
+                                    En savoir plus
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="results-actions">
+                        <button id="btn-restart" class="btn btn-secondary">
+                            🔄 Refaire le diagnostic
+                        </button>
+                        <button id="btn-share" class="btn btn-primary">
+                            📤 Partager mes résultats
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <div class="logo">
+                        <img src="mutuelle-corse-logo.png" alt="Mutuelle de Corse" class="logo-img">
+                        <div class="logo-text">
+                            <span class="logo-title">Mutuelle de Corse</span>
+                            <span class="logo-subtitle">Engagement RSE</span>
+                        </div>
+                    </div>
+                    <p>Accompagner les entreprises corses dans leur transition vers une économie plus responsable et durable.</p>
+                </div>
+                <div class="footer-links">
+                    <h4>Navigation</h4>
+                    <ul>
+                        <li><a href="index.html">Comprendre la RSE</a></li>
+                        <li><a href="iso26000.html">Norme ISO 26000</a></li>
+                        <li><a href="quiz.html">Quiz RSE</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>Ressources</h4>
+                    <ul>
+                        <li><a href="#" target="_blank" rel="noopener">Guide RSE TPE/PME</a></li>
+                        <li><a href="#" target="_blank" rel="noopener">Obligations légales</a></li>
+                        <li><a href="#" target="_blank" rel="noopener">Aides et financements</a></li>
+                    </ul>
+                </div>
+                <div class="footer-contact">
+                    <h4>Contact</h4>
+                    <p>📍 Ajaccio, Corse</p>
+                    <p>📧 rse@mutuelle-corse.fr</p>
+                    <p>📞 04 95 XX XX XX</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Mutuelle de Corse. Tous droits réservés.</p>
+                <div class="footer-legal">
+                    <a href="#">Mentions légales</a>
+                    <a href="#">Politique de confidentialité</a>
+                    <a href="#">Accessibilité</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Chatbot Widget -->
+    <div id="chatbot-widget" class="chatbot-widget" aria-label="Assistant RSE">
+        <button id="chatbot-toggle" class="chatbot-toggle" aria-expanded="false" aria-controls="chatbot-panel" aria-label="Ouvrir l'assistant RSE">
+            <span class="chatbot-icon">💬</span>
+            <span class="chatbot-close">✕</span>
+        </button>
+        <div id="chatbot-panel" class="chatbot-panel" role="dialog" aria-labelledby="chatbot-title" hidden>
+            <div class="chatbot-header">
+                <div class="chatbot-avatar">🤖</div>
+                <div>
+                    <h3 id="chatbot-title">Assistant RSE</h3>
+                    <p>Posez-moi vos questions</p>
+                </div>
+            </div>
+            <div id="chatbot-messages" class="chatbot-messages" role="log" aria-live="polite">
+                <!-- Messages will be inserted here -->
+            </div>
+            <form id="chatbot-form" class="chatbot-form">
+                <input type="text" id="chatbot-input" class="chatbot-input" placeholder="Tapez votre question..." aria-label="Votre message" autocomplete="off">
+                <button type="submit" class="chatbot-send" aria-label="Envoyer">
+                    <span>➤</span>
+                </button>
+            </form>
+            <div class="chatbot-suggestions">
+                <button type="button" class="suggestion-chip" data-question="Comment fonctionne le quiz ?">Comment ça marche ?</button>
+                <button type="button" class="suggestion-chip" data-question="Comment améliorer mon score ?">Améliorer mon score</button>
+                <button type="button" class="suggestion-chip" data-question="Aide pour le quiz">Aide</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="chatbot-ai.js"></script>
+    <script src="quiz.js"></script>
+    <script>
+        // Mobile nav toggle
+        const navToggle = document.querySelector('.nav-toggle');
+        const navMenu = document.querySelector('.nav-menu');
+        
+        navToggle.addEventListener('click', () => {
+            const expanded = navToggle.getAttribute('aria-expanded') === 'true';
+            navToggle.setAttribute('aria-expanded', !expanded);
+            navMenu.classList.toggle('active');
+        });
+    </script>
+</body>
+</html>
