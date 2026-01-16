@@ -765,6 +765,61 @@ async function generateQuizFeedback(results, companyInfo, answers) {
         .filter(cat => cat.percentage >= 60)
         .map(cat => cat.name);
     
+    // Analyze individual answers to find specific criteria met (score 2-3)
+    const criteriaMapping = {
+        1: { name: "Vision/mission RSE formalisée", category: "Gouvernance" },
+        2: { name: "Intégration des enjeux sociaux/environnementaux dans les décisions", category: "Gouvernance" },
+        3: { name: "Référent RSE désigné", category: "Gouvernance" },
+        4: { name: "Vérification des pratiques sociales des fournisseurs", category: "Droits de l'Homme" },
+        5: { name: "Dispositifs anti-discrimination", category: "Droits de l'Homme" },
+        6: { name: "Canal de signalement éthique", category: "Droits de l'Homme" },
+        7: { name: "Évaluation du bien-être collaborateurs", category: "Conditions de travail" },
+        8: { name: "Politique de formation développée", category: "Conditions de travail" },
+        9: { name: "Gestion proactive santé/sécurité", category: "Conditions de travail" },
+        10: { name: "Bilan carbone réalisé", category: "Environnement" },
+        11: { name: "Démarche réduction des déchets", category: "Environnement" },
+        12: { name: "Gestion active de l'énergie", category: "Environnement" },
+        13: { name: "Charte éthique / code de conduite", category: "Loyauté des pratiques" },
+        14: { name: "Achats responsables avec critères RSE", category: "Loyauté des pratiques" },
+        15: { name: "Transparence des pratiques commerciales", category: "Loyauté des pratiques" },
+        16: { name: "Information client complète", category: "Questions consommateurs" },
+        17: { name: "Offre de produits/services durables", category: "Questions consommateurs" },
+        18: { name: "Service client structuré", category: "Questions consommateurs" },
+        19: { name: "Achats locaux significatifs (Corse)", category: "Communautés locales" },
+        20: { name: "Engagement associatif / mécénat local", category: "Communautés locales" },
+        21: { name: "Emploi local et insertion professionnelle", category: "Communautés locales" }
+    };
+    
+    // Identify criteria already met (score >= 2) - can be communicated/valued
+    const criteriaMet = [];
+    const criteriaExcellent = [];
+    const criteriaToImprove = [];
+    
+    Object.entries(answers).forEach(([questionId, score]) => {
+        const qId = parseInt(questionId);
+        const criteria = criteriaMapping[qId];
+        if (criteria) {
+            if (score >= 3) {
+                criteriaExcellent.push(criteria);
+            } else if (score >= 2) {
+                criteriaMet.push(criteria);
+            } else if (score <= 1) {
+                criteriaToImprove.push(criteria);
+            }
+        }
+    });
+    
+    // Build criteria strings for prompt
+    const excellentCriteriaStr = criteriaExcellent.length > 0 
+        ? criteriaExcellent.map(c => `✅ **${c.name}** (${c.category})`).join('\n')
+        : 'Aucun critère au niveau excellent';
+    
+    const metCriteriaStr = criteriaMet.length > 0
+        ? criteriaMet.map(c => `🟢 ${c.name} (${c.category})`).join('\n')
+        : 'Aucun critère au niveau intermédiaire';
+        
+    const improveCriteriaStr = criteriaToImprove.slice(0, 5).map(c => `🔴 ${c.name}`).join('\n');
+
     const feedbackPrompt = `L'utilisateur vient de terminer le quiz d'auto-évaluation RSE. Analyse ses résultats et donne des conseils TRÈS CONCRETS et ACTIONNABLES.
 
 ## PROFIL DE L'ENTREPRISE
@@ -779,41 +834,53 @@ async function generateQuizFeedback(results, companyInfo, answers) {
 ## SCORES DÉTAILLÉS PAR CATÉGORIE ISO 26000
 ${categoryDetails}
 
-## ANALYSE
-- **Points forts (≥60%)** : ${strongAreas.length > 0 ? strongAreas.join(', ') : 'Aucun'}
-- **Axes prioritaires (<50%)** : ${weakAreas.length > 0 ? weakAreas.join(', ') : 'Aucun'}
+## CRITÈRES RSE DÉJÀ EXCELLENTS (score 3/3) - À VALORISER EN COMMUNICATION
+${excellentCriteriaStr}
 
-## TA MISSION
-Génère un feedback de 250-350 mots MAXIMUM structuré ainsi :
+## CRITÈRES RSE BIEN ENGAGÉS (score 2/3) - PEUVENT ÊTRE MIS EN AVANT
+${metCriteriaStr}
 
-1. **Félicitations personnalisées** (2-3 phrases)
-   - Mentionne le score et les points forts spécifiques
-   - Adapte au secteur d'activité
+## CRITÈRES À AMÉLIORER EN PRIORITÉ (score 0-1/3)
+${improveCriteriaStr}
 
-2. **Plan d'action prioritaire** (le plus important)
-   Pour les 2 domaines les plus faibles, donne pour CHACUN :
-   - 🎯 **Objectif** : ce qu'ils doivent atteindre
-   - ✅ **Action 1** : action CONCRÈTE faisable cette semaine (avec outil gratuit si possible)
-   - ✅ **Action 2** : action à faire ce mois-ci
-   - ⏱️ **Temps estimé** : X heures ou X jours
-   - 💰 **Coût** : gratuit / ~XX€ / budget à prévoir
+## ANALYSE GLOBALE
+- **Points forts (catégories ≥60%)** : ${strongAreas.length > 0 ? strongAreas.join(', ') : 'Aucun'}
+- **Axes prioritaires (catégories <50%)** : ${weakAreas.length > 0 ? weakAreas.join(', ') : 'Aucun'}
+- **Nombre de critères excellents** : ${criteriaExcellent.length}/21
+- **Nombre de critères engagés** : ${criteriaMet.length}/21
 
-3. **Ressource clé** (1 seule)
-   - Un lien ou outil spécifique et gratuit pour démarrer immédiatement
+## TA MISSION - STRUCTURE OBLIGATOIRE
 
-4. **Prochaine étape** (1 phrase)
-   - Propose de poser des questions sur un domaine spécifique
-   - OU mentionne l'accompagnement Mutuelle de Corse
+### 1. 🌟 **VOS ATOUTS RSE À VALORISER IMMÉDIATEMENT**
+Liste les 3-5 critères excellents ou bien engagés de l'utilisateur. Pour chacun, explique :
+- Comment le mettre en avant dans un appel d'offre (quelle case cocher)
+- Comment le communiquer (site web, plaquette, réseaux sociaux)
+- Quel label ou certification pourrait le valoriser
+
+### 2. 📢 **CONSEILS DE COMMUNICATION RSE**
+Donne 3 actions concrètes pour mieux communiquer sur les engagements RSE déjà en place :
+- Où communiquer (LinkedIn, site, presse locale)
+- Comment formuler (exemples de phrases)
+- À qui s'adresser (clients, donneurs d'ordre, collectivités)
+
+### 3. 🎯 **PLAN D'AMÉLIORATION PRIORITAIRE**
+Pour les 2 critères les plus faibles, donne :
+- ✅ **Action rapide** (cette semaine)
+- ✅ **Action moyen terme** (ce mois)
+- 💰 **Coût estimé** et ⏱️ **Temps**
+
+### 4. 💡 **POUR LES APPELS D'OFFRE**
+Explique comment utiliser ces atouts RSE :
+- Quelles cases le candidat peut déjà cocher
+- Comment justifier chaque critère avec des preuves
+- Quels points peuvent rapporter des points bonus
 
 ## RÈGLES STRICTES
-- Sois ULTRA CONCRET : noms d'outils, délais précis, coûts estimés
-- Adapte au SECTEUR (tourisme ≠ BTP ≠ commerce)
-- Adapte à la TAILLE (TPE < 10 salariés = solutions simples et gratuites)
-- Pas de blabla théorique, que de l'ACTIONNABLE
-- Utilise des émojis pour structurer (🎯 ✅ ⏱️ 💰 📌)
-- Si secteur = Tourisme/Hôtellerie : mentionne écolabels, économies d'eau/énergie
-- Si secteur = BTP : mentionne gestion déchets chantier, sécurité
-- Si secteur = Commerce : mentionne achats responsables, relation client`;
+- Sois SPÉCIFIQUE aux critères identifiés ci-dessus
+- Mentionne les critères EXCELLENTS comme des ATOUTS à communiquer
+- Adapte au secteur d'activité (${companyInfo.sector || 'non précisé'})
+- Utilise des émojis pour structurer
+- Maximum 400 mots`;
 
     try {
         // Open chatbot if not already open
@@ -832,7 +899,28 @@ Génère un feedback de 250-350 mots MAXIMUM structuré ainsi :
         // Check if API key is configured
         if (GROQ_API_KEY === 'YOUR_GROQ_API_KEY') {
             hideTyping();
-            addMessage(`🎉 **Félicitations pour avoir complété le quiz !**\n\nVotre score : **${results.totalScore}%** - Niveau **${results.maturityLevel.level}**\n\n${results.maturityLevel.description}\n\n⚠️ Pour des conseils personnalisés par l'IA, configurez la clé API Groq dans chatbot-ai.js`, 'bot');
+            // Provide a basic analysis without AI
+            let basicFeedback = `🎉 **Félicitations pour avoir complété le quiz !**\n\n`;
+            basicFeedback += `📊 **Votre score** : **${results.totalScore}%** - Niveau **${results.maturityLevel.level}**\n\n`;
+            
+            if (criteriaExcellent.length > 0) {
+                basicFeedback += `🌟 **Vos atouts RSE à valoriser :**\n`;
+                criteriaExcellent.forEach(c => {
+                    basicFeedback += `• ${c.name}\n`;
+                });
+                basicFeedback += `\n💡 *Mettez ces points en avant dans vos appels d'offre et votre communication !*\n\n`;
+            }
+            
+            if (criteriaMet.length > 0) {
+                basicFeedback += `🟢 **Critères bien engagés :**\n`;
+                criteriaMet.slice(0, 3).forEach(c => {
+                    basicFeedback += `• ${c.name}\n`;
+                });
+                basicFeedback += `\n`;
+            }
+            
+            basicFeedback += `⚠️ Pour des conseils personnalisés par l'IA Stella, configurez la clé API Groq.`;
+            addMessage(basicFeedback, 'bot');
             return;
         }
         
@@ -850,7 +938,7 @@ Génère un feedback de 250-350 mots MAXIMUM structuré ainsi :
                     { role: 'user', content: feedbackPrompt }
                 ],
                 temperature: 0.7,
-                max_tokens: 600
+                max_tokens: 800
             })
         });
         
@@ -865,7 +953,7 @@ Génère un feedback de 250-350 mots MAXIMUM structuré ainsi :
         
         // Add to conversation history
         conversationHistory.push(
-            { role: 'user', content: `J'ai terminé le quiz RSE avec un score de ${results.totalScore}%` },
+            { role: 'user', content: `J'ai terminé le quiz RSE avec un score de ${results.totalScore}%. Critères excellents: ${criteriaExcellent.map(c => c.name).join(', ')}` },
             { role: 'assistant', content: feedback }
         );
         
@@ -873,14 +961,28 @@ Génère un feedback de 250-350 mots MAXIMUM structuré ainsi :
         
         // Add appel d'offre suggestion after a short delay
         setTimeout(() => {
-            addMessage("📝 **Astuce** : Vous avez un appel d'offre à venir ? Copiez-collez les critères RSE du document ici et je vous dirai lesquels vous pouvez déjà cocher et comment vous améliorer pour maximiser vos chances !", 'bot');
+            addMessage("📝 **Astuce** : Vous avez un appel d'offre à venir ? Envoyez-moi le document (.docx) ou copiez-collez les critères RSE et je vous dirai lesquels vous pouvez déjà cocher grâce à vos atouts identifiés ! 📎", 'bot');
         }, 1500);
         
     } catch (error) {
         hideTyping();
         console.error('Feedback generation error:', error);
-        // Fallback message
-        addMessage(`🎉 **Félicitations pour avoir complété le quiz !**\n\nVotre score : **${results.totalScore}%** - Niveau **${results.maturityLevel.level}**\n\n${results.maturityLevel.description}\n\nN'hésitez pas à me poser des questions sur vos résultats ou sur comment améliorer votre démarche RSE !\n\n📝 **Astuce** : Copiez-collez les critères RSE d'un appel d'offre et je vous dirai lesquels vous pouvez cocher !`, 'bot');
+        // Fallback message with basic criteria analysis
+        let fallbackMsg = `🎉 **Félicitations pour avoir complété le quiz !**\n\n`;
+        fallbackMsg += `📊 **Score** : **${results.totalScore}%** - Niveau **${results.maturityLevel.level}**\n\n`;
+        
+        if (criteriaExcellent.length > 0) {
+            fallbackMsg += `🌟 **Vos points forts à communiquer :**\n`;
+            criteriaExcellent.slice(0, 4).forEach(c => {
+                fallbackMsg += `✅ ${c.name}\n`;
+            });
+            fallbackMsg += `\n*Valorisez ces atouts dans vos appels d'offre !*\n\n`;
+        }
+        
+        fallbackMsg += `N'hésitez pas à me poser des questions sur vos résultats !\n\n`;
+        fallbackMsg += `📝 **Astuce** : Copiez-collez les critères RSE d'un appel d'offre et je vous dirai lesquels vous pouvez cocher !`;
+        
+        addMessage(fallbackMsg, 'bot');
     }
 }
 
