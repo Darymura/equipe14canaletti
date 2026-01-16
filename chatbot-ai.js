@@ -14,6 +14,9 @@
 // ⚠️ REMPLACEZ PAR VOTRE CLÉ API GROQ (gratuite sur console.groq.com)
 const GROQ_API_KEY = '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';
 
+// API endpoint - using CORS proxy for browser compatibility
+const GROQ_API_URL = 'https://corsproxy.io/?' + encodeURIComponent('https://api.groq.com/openai/v1/chat/completions');
+
 // State pour l'upload de fichiers
 let uploadedFile = null;
 let uploadedFileBase64 = null;
@@ -656,7 +659,7 @@ async function callGroqAPI(userMessage) {
         conversationHistory = conversationHistory.slice(-10);
     }
     
-    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    const response = await fetch(GROQ_API_URL, {
         method: 'POST',
         headers: {
             'Authorization': `Bearer ${GROQ_API_KEY}`,
@@ -925,7 +928,7 @@ Explique comment utiliser ces atouts RSE :
         }
         
         // Call API for personalized feedback
-        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        const response = await fetch(GROQ_API_URL, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${GROQ_API_KEY}`,
