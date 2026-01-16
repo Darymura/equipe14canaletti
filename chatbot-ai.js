@@ -967,23 +967,187 @@ Explique comment utiliser ces atouts RSE :
     } catch (error) {
         hideTyping();
         console.error('Feedback generation error:', error);
-        // Fallback message with basic criteria analysis
-        let fallbackMsg = `🎉 **Félicitations pour avoir complété le quiz !**\n\n`;
-        fallbackMsg += `📊 **Score** : **${results.totalScore}%** - Niveau **${results.maturityLevel.level}**\n\n`;
         
-        if (criteriaExcellent.length > 0) {
-            fallbackMsg += `🌟 **Vos points forts à communiquer :**\n`;
-            criteriaExcellent.slice(0, 4).forEach(c => {
-                fallbackMsg += `✅ ${c.name}\n`;
-            });
-            fallbackMsg += `\n*Valorisez ces atouts dans vos appels d'offre !*\n\n`;
-        }
-        
-        fallbackMsg += `N'hésitez pas à me poser des questions sur vos résultats !\n\n`;
-        fallbackMsg += `📝 **Astuce** : Copiez-collez les critères RSE d'un appel d'offre et je vous dirai lesquels vous pouvez cocher !`;
-        
-        addMessage(fallbackMsg, 'bot');
+        // Provide comprehensive local analysis when API fails (e.g., CORS on GitHub Pages)
+        generateLocalQuizAnalysis(results, companyInfo, criteriaExcellent, criteriaMet, criteriaToImprove, strongAreas, weakAreas);
     }
+}
+
+// Generate comprehensive local analysis without API (for CORS issues or API unavailable)
+function generateLocalQuizAnalysis(results, companyInfo, criteriaExcellent, criteriaMet, criteriaToImprove, strongAreas, weakAreas) {
+    const sector = companyInfo.sector || 'général';
+    
+    // Build comprehensive feedback message
+    let msg = `🎉 **Félicitations pour avoir complété le quiz RSE !**\n\n`;
+    msg += `📊 **Votre score** : **${results.totalScore}%** - Niveau **${results.maturityLevel.level}** ${results.maturityLevel.emoji}\n\n`;
+    
+    // Section 1: Strong points to communicate
+    if (criteriaExcellent.length > 0) {
+        msg += `---\n\n### 🌟 VOS ATOUTS RSE À VALORISER IMMÉDIATEMENT\n\n`;
+        msg += `Vous excellez dans **${criteriaExcellent.length} critère(s)** que vous pouvez mettre en avant :\n\n`;
+        
+        criteriaExcellent.forEach(c => {
+            msg += `✅ **${c.name}**\n`;
+            msg += `   📢 *${getCommunicationTip(c.name, sector)}*\n\n`;
+        });
+    }
+    
+    // Section 2: Well-engaged criteria
+    if (criteriaMet.length > 0) {
+        msg += `### 🟢 CRITÈRES BIEN ENGAGÉS\n\n`;
+        msg += `Ces ${criteriaMet.length} point(s) peuvent aussi être valorisés :\n\n`;
+        
+        criteriaMet.slice(0, 4).forEach(c => {
+            msg += `• ${c.name}\n`;
+        });
+        msg += `\n`;
+    }
+    
+    // Section 3: Priority improvements
+    if (criteriaToImprove.length > 0) {
+        msg += `---\n\n### 🎯 PLAN D'ACTION PRIORITAIRE\n\n`;
+        
+        const topPriorities = criteriaToImprove.slice(0, 3);
+        topPriorities.forEach(c => {
+            const actions = getImprovementActions(c.name, sector);
+            msg += `**${c.name}**\n`;
+            msg += `   ✅ Action rapide : ${actions.quick}\n`;
+            msg += `   ✅ Cette semaine : ${actions.week}\n\n`;
+        });
+    }
+    
+    // Section 4: Tips for tenders (appels d'offre)
+    msg += `---\n\n### 📋 POUR VOS APPELS D'OFFRE\n\n`;
+    
+    if (criteriaExcellent.length > 0 || criteriaMet.length > 0) {
+        msg += `**Cases que vous pouvez déjà cocher :**\n`;
+        
+        const allStrong = [...criteriaExcellent, ...criteriaMet].slice(0, 5);
+        allStrong.forEach(c => {
+            const tenderTip = getTenderCheckbox(c.name);
+            if (tenderTip) {
+                msg += `☑️ ${tenderTip}\n`;
+            }
+        });
+        msg += `\n`;
+    }
+    
+    msg += `**💡 Conseil** : Dans vos réponses aux appels d'offre, détaillez vos actions avec des chiffres concrets (% d'achats locaux, nombre de formations, tonnes de déchets recyclés...).\n\n`;
+    
+    // Section 5: Communication tips
+    msg += `---\n\n### 📢 COMMUNIQUEZ SUR VOS ENGAGEMENTS\n\n`;
+    msg += `• **LinkedIn** : Partagez une action RSE par mois\n`;
+    msg += `• **Site web** : Créez une page "Nos engagements"\n`;
+    msg += `• **Presse locale** : Contactez Corse-Matin pour un article\n`;
+    msg += `• **Appels d'offre** : Joignez un mémo RSE à vos candidatures\n`;
+    
+    addMessage(msg, 'bot');
+    
+    // Follow-up message
+    setTimeout(() => {
+        addMessage(`📝 **Envoyez-moi un appel d'offre** (.docx) ou décrivez les critères RSE demandés, et je vous dirai lesquels vous pouvez déjà cocher ! 📎`, 'bot');
+    }, 1500);
+}
+
+// Helper: Get communication tip based on criteria
+function getCommunicationTip(criteriaName, sector) {
+    const tips = {
+        "Vision/mission RSE formalisée": "Publiez votre charte RSE sur votre site et LinkedIn",
+        "Intégration des enjeux sociaux/environnementaux dans les décisions": "Mentionnez-le dans vos réponses aux appels d'offre",
+        "Référent RSE désigné": "Indiquez le nom et rôle de votre référent dans vos documents",
+        "Vérification des pratiques sociales des fournisseurs": "Créez une charte fournisseurs que vous pouvez partager",
+        "Dispositifs anti-discrimination": "Valorisez votre politique RH inclusive",
+        "Canal de signalement éthique": "Mentionnez ce dispositif dans votre rapport RSE",
+        "Évaluation du bien-être collaborateurs": "Partagez vos résultats d'enquête (anonymisés)",
+        "Politique de formation développée": "Communiquez le nombre d'heures de formation par salarié",
+        "Gestion proactive santé/sécurité": "Affichez vos indicateurs : jours sans accident, formations...",
+        "Bilan carbone réalisé": "Publiez votre bilan et vos objectifs de réduction",
+        "Démarche réduction des déchets": "Quantifiez : tonnes recyclées, % de réduction",
+        "Gestion active de l'énergie": "Communiquez vos économies d'énergie en %",
+        "Charte éthique / code de conduite": "Rendez-la publique sur votre site",
+        "Achats responsables avec critères RSE": "Mentionnez le % de fournisseurs locaux/certifiés",
+        "Transparence des pratiques commerciales": "Mettez en avant votre politique de prix clairs",
+        "Information client complète": "Créez des fiches produits détaillées",
+        "Offre de produits/services durables": "Labellez ou certifiez vos produits durables",
+        "Service client structuré": "Affichez votre taux de satisfaction client",
+        "Achats locaux significatifs (Corse)": "Indiquez le % d'achats en Corse sur vos supports",
+        "Engagement associatif / mécénat local": "Partagez vos partenariats sur les réseaux sociaux",
+        "Emploi local et insertion professionnelle": "Communiquez le nombre d'emplois créés localement"
+    };
+    return tips[criteriaName] || "Documentez cette action et partagez-la";
+}
+
+// Helper: Get improvement actions based on criteria
+function getImprovementActions(criteriaName, sector) {
+    const actions = {
+        "Vision/mission RSE formalisée": {
+            quick: "Rédigez 3 phrases sur vos valeurs RSE",
+            week: "Formalisez une charte d'1 page avec vos engagements"
+        },
+        "Référent RSE désigné": {
+            quick: "Désignez un collaborateur volontaire",
+            week: "Définissez ses missions et communiquez en interne"
+        },
+        "Bilan carbone réalisé": {
+            quick: "Testez l'outil gratuit Nos Gestes Climat (entreprise)",
+            week: "Réalisez un bilan simplifié avec l'ADEME"
+        },
+        "Démarche réduction des déchets": {
+            quick: "Installez le tri sélectif avec signalétique",
+            week: "Contactez un prestataire de recyclage local"
+        },
+        "Gestion active de l'énergie": {
+            quick: "Relevez vos consommations des 12 derniers mois",
+            week: "Identifiez 3 actions d'économie (LED, programmation chauffage...)"
+        },
+        "Charte éthique / code de conduite": {
+            quick: "Listez 5-10 principes éthiques clés",
+            week: "Rédigez et diffusez une charte d'1-2 pages"
+        },
+        "Achats locaux significatifs (Corse)": {
+            quick: "Listez vos fournisseurs actuels et leur localisation",
+            week: "Identifiez 2-3 alternatives locales pour vos achats principaux"
+        },
+        "Engagement associatif / mécénat local": {
+            quick: "Identifiez 2-3 associations locales à soutenir",
+            week: "Proposez un premier partenariat (temps, matériel ou don)"
+        },
+        "Évaluation du bien-être collaborateurs": {
+            quick: "Créez un questionnaire de 5-10 questions",
+            week: "Diffusez l'enquête et analysez les résultats"
+        },
+        "Politique de formation développée": {
+            quick: "Recensez les besoins de formation de chaque collaborateur",
+            week: "Établissez un plan de formation annuel"
+        }
+    };
+    
+    return actions[criteriaName] || {
+        quick: "Documentez vos pratiques actuelles",
+        week: "Définissez un objectif mesurable d'amélioration"
+    };
+}
+
+// Helper: Get tender checkbox text
+function getTenderCheckbox(criteriaName) {
+    const checkboxes = {
+        "Vision/mission RSE formalisée": "Politique RSE formalisée",
+        "Référent RSE désigné": "Référent développement durable identifié",
+        "Bilan carbone réalisé": "Bilan GES / Bilan carbone réalisé",
+        "Démarche réduction des déchets": "Plan de gestion des déchets",
+        "Gestion active de l'énergie": "Démarche d'efficacité énergétique",
+        "Charte éthique / code de conduite": "Charte éthique / Code de conduite",
+        "Achats responsables avec critères RSE": "Politique d'achats responsables",
+        "Achats locaux significatifs (Corse)": "Recours aux circuits courts / fournisseurs locaux",
+        "Emploi local et insertion professionnelle": "Clause d'insertion / Emploi local",
+        "Politique de formation développée": "Plan de formation des collaborateurs",
+        "Gestion proactive santé/sécurité": "Politique santé-sécurité au travail",
+        "Engagement associatif / mécénat local": "Actions de mécénat / Engagement territorial",
+        "Dispositifs anti-discrimination": "Politique de diversité et inclusion",
+        "Canal de signalement éthique": "Dispositif d'alerte éthique",
+        "Offre de produits/services durables": "Offre éco-responsable / Labels environnementaux"
+    };
+    return checkboxes[criteriaName] || null;
 }
 
 // Export for potential external use
