@@ -216,6 +216,21 @@ La RSE (Responsabilité Sociétale des Entreprises) est une démarche volontaire
 - Utilise des emojis avec modération
 - Réponds en français
 
+## ANALYSE D'APPELS D'OFFRE
+Quand un utilisateur te donne le texte d'un appel d'offre ou des critères RSE d'un marché public, analyse-le ainsi :
+
+### 📋 **CRITÈRES RSE DÉTECTÉS**
+Liste les critères RSE demandés avec leur pondération si mentionnée.
+
+### ✅ **CE QUE L'ENTREPRISE PEUT DÉJÀ COCHER**
+Pour chaque critère, indique ce qu'une TPE/PME corse peut probablement déjà justifier et les preuves à fournir.
+
+### 🎯 **AXES D'AMÉLIORATION RAPIDES**
+Actions concrètes réalisables avant la date limite de réponse, avec délai et coût.
+
+### 📄 **DOCUMENTS À PRÉPARER**
+Liste des pièces justificatives RSE à inclure.
+
 ## CONTACTS MUTUELLE DE CORSE
 - Email : rse@mutuelle-corse.fr
 - Téléphone : 04 95 XX XX XX
@@ -327,10 +342,19 @@ async function handleFileSelect(e) {
             uploadedFileBase64 = await convertFileToBase64(file);
         }
         
-        addMessage(`📎 Fichier "${file.name}" prêt à être analysé. Posez votre question ou cliquez sur "Analyser cet appel d'offre".`, 'bot');
+        // Since vision API is not reliably available, guide user to paste text
+        addMessage(`📎 Fichier "${file.name}" reçu.
+
+⚠️ **Note** : L'analyse automatique d'images n'est pas disponible actuellement.
+
+✅ **Pour analyser votre appel d'offre, copiez-collez le texte** des sections suivantes dans le chat :
+- Les **critères d'attribution** (et leur pondération)
+- Les **clauses RSE/environnementales**
+- Le **type de marché** (travaux, services, fournitures)
+
+Je pourrai alors vous dire quels critères vous pouvez déjà cocher et comment vous améliorer ! 💡`, 'bot');
         
-        // Add suggestion for analysis
-        addAnalysisSuggestion();
+        clearUploadedFile();
     } catch (error) {
         console.error('Error processing file:', error);
         addMessage("⚠️ Erreur lors du traitement du fichier. Veuillez réessayer.", 'bot');
@@ -381,7 +405,7 @@ function toggleChatbot() {
     
     if (!isExpanded && !chatbotInitialized) {
         // First open: show greeting
-        addMessage("Bonjour ! 👋 Je suis votre assistant RSE. Je peux vous aider à :\n\n• Comprendre la RSE et la norme ISO 26000\n• Vous accompagner dans votre démarche responsable\n• **Analyser vos appels d'offre** : cliquez sur 📎 pour importer un document (PDF ou image) et je vous dirai quels critères RSE vous pouvez déjà cocher !\n\nQue souhaitez-vous savoir ?", 'bot');
+        addMessage("Bonjour ! 👋 Je suis votre assistant RSE. Je peux vous aider à :\n\n• Comprendre la RSE et la norme ISO 26000\n• Vous accompagner dans votre démarche responsable\n• **Analyser vos appels d'offre** : copiez-collez les critères RSE d'un appel d'offre et je vous dirai quels critères vous pouvez déjà cocher !\n\nQue souhaitez-vous savoir ?", 'bot');
         chatbotInitialized = true;
     }
     
@@ -655,16 +679,16 @@ Génère un feedback de 250-350 mots MAXIMUM structuré ainsi :
         
         addMessage(feedback, 'bot');
         
-        // Add file upload suggestion after a short delay
+        // Add appel d'offre suggestion after a short delay
         setTimeout(() => {
-            addMessage("📎 **Astuce** : Vous avez un appel d'offre à venir ? Cliquez sur le bouton 📎 ci-dessous pour importer votre document (PDF ou image) et je vous dirai quels critères RSE vous pouvez déjà cocher et comment vous améliorer pour maximiser vos chances !", 'bot');
+            addMessage("📝 **Astuce** : Vous avez un appel d'offre à venir ? Copiez-collez les critères RSE du document ici et je vous dirai lesquels vous pouvez déjà cocher et comment vous améliorer pour maximiser vos chances !", 'bot');
         }, 1500);
         
     } catch (error) {
         hideTyping();
         console.error('Feedback generation error:', error);
         // Fallback message
-        addMessage(`🎉 **Félicitations pour avoir complété le quiz !**\n\nVotre score : **${results.totalScore}%** - Niveau **${results.maturityLevel.level}**\n\n${results.maturityLevel.description}\n\nN'hésitez pas à me poser des questions sur vos résultats ou sur comment améliorer votre démarche RSE !\n\n📎 **Astuce** : Vous pouvez aussi importer un appel d'offre (PDF ou image) en cliquant sur 📎 et je vous dirai quels critères RSE vous pouvez cocher !`, 'bot');
+        addMessage(`🎉 **Félicitations pour avoir complété le quiz !**\n\nVotre score : **${results.totalScore}%** - Niveau **${results.maturityLevel.level}**\n\n${results.maturityLevel.description}\n\nN'hésitez pas à me poser des questions sur vos résultats ou sur comment améliorer votre démarche RSE !\n\n📝 **Astuce** : Copiez-collez les critères RSE d'un appel d'offre et je vous dirai lesquels vous pouvez cocher !`, 'bot');
     }
 }
 
