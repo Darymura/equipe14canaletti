@@ -14,6 +14,49 @@
 // ⚠️ REMPLACEZ PAR VOTRE CLÉ API GROQ (gratuite sur console.groq.com)
 const GROQ_API_KEY = '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';
 
+// State pour l'upload de fichiers
+let uploadedFile = null;
+let uploadedFileBase64 = null;
+
+// Prompt système pour l'analyse d'appels d'offre RSE
+const APPEL_OFFRE_ANALYSIS_PROMPT = `Tu es un expert en analyse d'appels d'offre et en critères RSE (ISO 26000). 
+L'utilisateur t'a envoyé un document d'appel d'offre. Analyse-le et identifie :
+
+## TA MISSION
+1. **Critères RSE déjà mentionnés** dans l'appel d'offre (ce que le candidat doit déjà avoir)
+2. **Critères RSE potentiels** où l'entreprise pourrait se démarquer
+3. **Recommandations concrètes** pour maximiser les chances de succès
+
+## FORMAT DE RÉPONSE OBLIGATOIRE
+
+### 📋 **CRITÈRES RSE DÉTECTÉS DANS L'APPEL D'OFFRE**
+Liste les critères RSE explicitement demandés avec leur pondération si mentionnée.
+
+### ✅ **CE QUE VOUS POUVEZ DÉJÀ COCHER**
+Pour chaque critère RSE trouvé, indique :
+- Le critère
+- Ce que l'entreprise corse moyenne peut probablement déjà justifier
+- Document/preuve type à fournir
+
+### 🎯 **AXES D'AMÉLIORATION POUR SE DÉMARQUER**
+Pour chaque axe :
+- L'action concrète à mettre en place
+- Le délai réaliste (avant de répondre à l'AO)
+- Le coût estimé (gratuit / ~XX€)
+- L'impact sur la notation
+
+### 📄 **DOCUMENTS À PRÉPARER**
+Liste des pièces justificatives RSE à inclure dans la réponse.
+
+### 💡 **CONSEIL STRATÉGIQUE**
+Un conseil clé pour maximiser les points RSE dans cet appel d'offre.
+
+## RÈGLES
+- Sois TRÈS CONCRET et ACTIONNABLE
+- Adapte au contexte des TPE/PME corses
+- Si tu ne peux pas lire certaines parties, indique-le clairement
+- Propose des solutions réalisables dans le temps imparti d'un appel d'offre`;
+
 // Contexte RSE et ISO 26000 pour l'IA
 const RSE_SYSTEM_PROMPT = `Tu es l'assistant RSE de la Mutuelle de Corse, expert en Responsabilité Sociétale des Entreprises et en norme ISO 26000. Tu accompagnes les entreprises corses dans leur démarche RSE.
 
@@ -184,6 +227,7 @@ let conversationHistory = [];
 
 // DOM Elements
 let chatbotWidget, chatbotToggle, chatbotPanel, chatbotMessages, chatbotForm, chatbotInput;
+let chatbotFileInput, chatbotUploadBtn, chatbotFilePreview, filePreviewName, filePreviewRemove;
 
 // Initialize chatbot
 function initChatbot() {
@@ -194,11 +238,27 @@ function initChatbot() {
     chatbotForm = document.getElementById('chatbot-form');
     chatbotInput = document.getElementById('chatbot-input');
     
+    // File upload elements
+    chatbotFileInput = document.getElementById('chatbot-file-input');
+    chatbotUploadBtn = document.getElementById('chatbot-upload-btn');
+    chatbotFilePreview = document.getElementById('chatbot-file-preview');
+    filePreviewName = document.getElementById('file-preview-name');
+    filePreviewRemove = document.getElementById('file-preview-remove');
+    
     if (!chatbotWidget) return;
     
     // Event listeners
     chatbotToggle.addEventListener('click', toggleChatbot);
     chatbotForm.addEventListener('submit', handleSubmit);
+    
+    // File upload event listeners
+    if (chatbotUploadBtn && chatbotFileInput) {
+        chatbotUploadBtn.addEventListener('click', () => chatbotFileInput.click());
+        chatbotFileInput.addEventListener('change', handleFileSelect);
+        if (filePreviewRemove) {
+            filePreviewRemove.addEventListener('click', clearUploadedFile);
+        }
+    }
     
     // Suggestion chips
     document.querySelectorAll('.suggestion-chip').forEach(chip => {
@@ -218,6 +278,90 @@ function initChatbot() {
             toggleChatbot();
         }
     });
+}
+
+// Handle file selection
+async function handleFileSelect(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    // Check file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+        addMessage("⚠️ Le fichier est trop volumineux. Taille maximale : 10 Mo.", 'bot');
+        chatbotFileInput.value = '';
+        return;
+    }
+    
+    // Check file type
+    const validTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+        addMessage("⚠️ Format non supporté. Utilisez un PDF ou une image (JPG, PNG, GIF, WebP).", 'bot');
+        chatbotFileInput.value = '';
+        return;
+    }
+    
+    uploadedFile = file;
+    
+    // Show preview
+    if (chatbotFilePreview && filePreviewName) {
+        const icon = file.type === 'application/pdf' ? '📄' : '🖼️';
+        filePreviewName.textContent = `${icon} ${file.name}`;
+        chatbotFilePreview.hidden = false;
+    }
+    
+    // Convert to base64
+    try {
+        if (file.type === 'application/pdf') {
+            // For PDF, we'll extract text or convert to image
+            uploadedFileBase64 = await convertFileToBase64(file);
+        } else {
+            // For images, convert directly
+            uploadedFileBase64 = await convertFileToBase64(file);
+        }
+        
+        addMessage(`📎 Fichier "${file.name}" prêt à être analysé. Posez votre question ou cliquez sur "Analyser cet appel d'offre".`, 'bot');
+        
+        // Add suggestion for analysis
+        addAnalysisSuggestion();
+    } catch (error) {
+        console.error('Error processing file:', error);
+        addMessage("⚠️ Erreur lors du traitement du fichier. Veuillez réessayer.", 'bot');
+        clearUploadedFile();
+    }
+}
+
+// Convert file to base64
+function convertFileToBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+            const base64 = reader.result.split(',')[1];
+            resolve(base64);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
+// Add analysis suggestion button
+function addAnalysisSuggestion() {
+    const suggestionEl = document.createElement('div');
+    suggestionEl.className = 'chat-message bot';
+    suggestionEl.innerHTML = `
+        <button type="button" class="analysis-suggestion-btn" onclick="window.RSEChatbot.analyzeUploadedDocument()">
+            🔍 Analyser cet appel d'offre RSE
+        </button>
+    `;
+    chatbotMessages.appendChild(suggestionEl);
+    chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+}
+
+// Clear uploaded file
+function clearUploadedFile() {
+    uploadedFile = null;
+    uploadedFileBase64 = null;
+    if (chatbotFileInput) chatbotFileInput.value = '';
+    if (chatbotFilePreview) chatbotFilePreview.hidden = true;
 }
 
 // Toggle chatbot panel
@@ -535,5 +679,159 @@ window.RSEChatbot = {
         chatbotInitialized = false;
     },
     // New function for quiz feedback
-    analyzeQuizResults: generateQuizFeedback
+    analyzeQuizResults: generateQuizFeedback,
+    // New function for document analysis
+    analyzeUploadedDocument: analyzeUploadedDocument
 };
+
+// Analyze uploaded document (PDF or image)
+async function analyzeUploadedDocument() {
+    if (!uploadedFile || !uploadedFileBase64) {
+        addMessage("⚠️ Veuillez d'abord importer un document (PDF ou image) en cliquant sur 📎", 'bot');
+        return;
+    }
+    
+    addMessage(`🔍 Analyse de "${uploadedFile.name}" en cours...`, 'user');
+    showTyping();
+    
+    try {
+        // Check API key
+        if (GROQ_API_KEY === 'YOUR_GROQ_API_KEY') {
+            hideTyping();
+            addMessage("⚠️ Le chatbot IA n'est pas configuré. Configurez la clé API Groq pour analyser les documents.", 'bot');
+            return;
+        }
+        
+        let response;
+        
+        if (uploadedFile.type === 'application/pdf') {
+            // For PDFs, we'll use a text-based approach with instructions
+            response = await analyzePDFDocument();
+        } else {
+            // For images, use vision API
+            response = await analyzeImageDocument();
+        }
+        
+        hideTyping();
+        addMessage(response, 'bot');
+        
+        // Clear the file after analysis
+        clearUploadedFile();
+        
+    } catch (error) {
+        hideTyping();
+        console.error('Document analysis error:', error);
+        addMessage("⚠️ Erreur lors de l'analyse du document. Veuillez réessayer ou essayer avec une image du document.", 'bot');
+    }
+}
+
+// Analyze PDF document
+async function analyzePDFDocument() {
+    // For PDF, we'll try to use the vision model with the base64 data
+    // If that doesn't work, we'll provide guidance
+    
+    try {
+        // Try using llama-3.2-90b-vision-preview which supports documents
+        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${GROQ_API_KEY}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                model: 'llama-3.2-90b-vision-preview',
+                messages: [
+                    {
+                        role: 'user',
+                        content: [
+                            {
+                                type: 'text',
+                                text: APPEL_OFFRE_ANALYSIS_PROMPT + "\n\nAnalyse ce document d'appel d'offre et identifie tous les critères RSE mentionnés."
+                            },
+                            {
+                                type: 'image_url',
+                                image_url: {
+                                    url: `data:application/pdf;base64,${uploadedFileBase64}`
+                                }
+                            }
+                        ]
+                    }
+                ],
+                temperature: 0.3,
+                max_tokens: 2048
+            })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            return data.choices[0].message.content;
+        }
+    } catch (e) {
+        console.log('Vision API failed for PDF, using fallback');
+    }
+    
+    // Fallback: provide guidance for PDF
+    return `📄 **Analyse de PDF**
+
+Je ne peux pas lire directement les fichiers PDF. Voici comment procéder :
+
+### Option 1 : Convertir en image
+1. Ouvrez votre PDF
+2. Faites une capture d'écran des pages importantes
+3. Uploadez l'image ici
+
+### Option 2 : Copier-coller le texte
+Copiez les sections RSE de votre appel d'offre et collez-les dans le chat.
+
+### Option 3 : Me décrire l'appel d'offre
+Dites-moi :
+- Le type de marché (travaux, services, fournitures)
+- Le secteur d'activité
+- Les critères RSE mentionnés
+
+💡 **Conseil** : Les critères RSE se trouvent généralement dans :
+- Le règlement de consultation (RC)
+- Les critères d'attribution (souvent 5-15% de la note)
+- Les clauses sociales et environnementales du CCAP`;
+}
+
+// Analyze image document using vision API
+async function analyzeImageDocument() {
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${GROQ_API_KEY}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            model: 'llama-3.2-90b-vision-preview',
+            messages: [
+                {
+                    role: 'user',
+                    content: [
+                        {
+                            type: 'text',
+                            text: APPEL_OFFRE_ANALYSIS_PROMPT + "\n\nAnalyse cette image d'appel d'offre et identifie tous les critères RSE mentionnés. Si l'image n'est pas lisible ou ne contient pas d'appel d'offre, indique-le clairement."
+                        },
+                        {
+                            type: 'image_url',
+                            image_url: {
+                                url: `data:${uploadedFile.type};base64,${uploadedFileBase64}`
+                            }
+                        }
+                    ]
+                }
+            ],
+            temperature: 0.3,
+            max_tokens: 2048
+        })
+    });
+    
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error?.message || 'Vision API request failed');
+    }
+    
+    const data = await response.json();
+    return data.choices[0].message.content;
+}

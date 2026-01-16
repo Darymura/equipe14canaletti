@@ -1915,6 +1915,101 @@ ul, ol {
     gap: var(--space-2);
     padding: var(--space-3);
     border-top: 1px solid var(--gray-200);
+    align-items: center;
+}
+
+/* File Upload Button */
+.chatbot-upload-btn {
+    width: 40px;
+    height: 40px;
+    background: var(--gray-100);
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    transition: all var(--transition-fast);
+    flex-shrink: 0;
+}
+
+.chatbot-upload-btn:hover {
+    background: var(--primary-50);
+    border-color: var(--primary-500);
+}
+
+.chatbot-upload-btn:active {
+    transform: scale(0.95);
+}
+
+/* File Preview */
+.chatbot-file-preview {
+    padding: var(--space-2) var(--space-3);
+    background: var(--primary-50);
+    border-bottom: 1px solid var(--primary-200);
+}
+
+.file-preview-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+}
+
+.file-preview-name {
+    font-size: 0.75rem;
+    color: var(--primary-700);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+}
+
+.file-preview-remove {
+    width: 20px;
+    height: 20px;
+    background: var(--gray-200);
+    border: none;
+    border-radius: var(--radius-full);
+    cursor: pointer;
+    font-size: 0.7rem;
+    color: var(--gray-600);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-fast);
+    flex-shrink: 0;
+}
+
+.file-preview-remove:hover {
+    background: var(--error-500);
+    color: white;
+}
+
+/* Analysis Suggestion Button */
+.analysis-suggestion-btn {
+    background: linear-gradient(135deg, var(--primary-500), var(--accent-500));
+    color: white;
+    border: none;
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-lg);
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.analysis-suggestion-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.analysis-suggestion-btn:active {
+    transform: translateY(0);
 }
 
 .chatbot-input {
@@ -2103,5 +2198,135 @@ ul, ol {
     
     .section {
         padding: 20pt 0;
+    }
+}
+
+/* =====================================================
+   Entreprises RSE Section
+   ===================================================== */
+.entreprises-rse-section {
+    margin-top: var(--space-12);
+    padding-top: var(--space-8);
+    border-top: 2px solid var(--gray-200);
+}
+
+.entreprises-rse-section h2 {
+    font-size: 1.5rem;
+    color: var(--gray-800);
+    margin-bottom: var(--space-4);
+    text-align: center;
+}
+
+.entreprises-intro {
+    text-align: center;
+    color: var(--gray-600);
+    max-width: 700px;
+    margin: 0 auto var(--space-8);
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+.entreprises-rse-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: var(--space-6);
+}
+
+.entreprise-rse-card {
+    background: white;
+    border-radius: var(--radius-xl);
+    padding: var(--space-6);
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--gray-200);
+    display: flex;
+    flex-direction: column;
+    transition: transform var(--transition-base), box-shadow var(--transition-base);
+}
+
+.entreprise-rse-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-xl);
+}
+
+.entreprise-header {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin-bottom: var(--space-4);
+}
+
+.entreprise-name {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--primary-600);
+    margin: 0;
+}
+
+.entreprise-location {
+    font-size: 0.875rem;
+    color: var(--gray-500);
+}
+
+.entreprise-description {
+    font-size: 0.9rem;
+    color: var(--gray-700);
+    line-height: 1.6;
+    margin-bottom: var(--space-4);
+    flex-grow: 1;
+}
+
+.entreprise-engagements {
+    background: var(--primary-50);
+    padding: var(--space-4);
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--space-4);
+}
+
+.entreprise-engagements strong {
+    display: block;
+    font-size: 0.875rem;
+    color: var(--primary-700);
+    margin-bottom: var(--space-2);
+}
+
+.entreprise-engagements ul {
+    margin: 0;
+    padding-left: var(--space-5);
+    font-size: 0.85rem;
+    color: var(--gray-700);
+}
+
+.entreprise-engagements li {
+    margin-bottom: var(--space-1);
+}
+
+.entreprise-engagements li:last-child {
+    margin-bottom: 0;
+}
+
+.entreprise-link {
+    align-self: flex-start;
+    margin-top: auto;
+    font-size: 0.9rem;
+    text-decoration: none;
+}
+
+.entreprise-link:hover {
+    background: var(--primary-500);
+    color: white;
+}
+
+/* Responsive adjustments for entreprises */
+@media (max-width: 768px) {
+    .entreprises-rse-list {
+        grid-template-columns: 1fr;
+    }
+    
+    .entreprise-rse-card {
+        padding: var(--space-4);
+    }
+    
+    .entreprises-rse-section h2 {
+        font-size: 1.25rem;
     }
 }

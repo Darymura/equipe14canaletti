@@ -3,6 +3,128 @@
  * Mutuelle de Corse - Évaluation de maturité RSE basée sur ISO 26000
  */
 
+// Entreprises corses engagées en RSE par secteur
+const entreprisesRSE = {
+    tourisme: [
+        {
+            name: "Corse Incentive",
+            location: "Ajaccio",
+            description: "Agence événementielle insulaire engagée en tourisme responsable. Privilégie les partenariats avec des hébergements et producteurs locaux, et met l'accent sur le respect de l'environnement et de la culture corse.",
+            engagements: ["Promotion des circuits courts", "Soutien aux acteurs locaux", "Respect de l'environnement"],
+            url: "https://www.corse-incentive.com/rse/"
+        },
+        {
+            name: "Hôtel Le Week End",
+            location: "Ajaccio",
+            description: "Hôtel 4 étoiles éco-responsable. La famille Leca a implémenté des pratiques respectueuses de l'environnement visant à harmoniser les exigences environnementales, sociales et économiques.",
+            engagements: ["Tri des déchets", "Énergies économes", "Approvisionnements bio et circuits courts", "Recrutement local"],
+            url: "https://www.hotel-le-weekend.com/tourisme-durable"
+        },
+        {
+            name: "Hôtel Palazzu",
+            location: "Galéria, Corse du Nord",
+            description: "Hôtel écoresponsable 4 étoiles sur le Cap Corse engagé dans une démarche de préservation des milieux naturels et minimisant l'impact de son activité sur l'environnement.",
+            engagements: ["LED et éclairages solaires", "Récupération d'eau et CO₂", "Produits d'entretien écologiques", "Produits locaux"],
+            url: "https://www.palazzu.com/fr/eco-hotel"
+        },
+        {
+            name: "Corsicatours",
+            location: "Ajaccio (Groupe Ettori)",
+            description: "Voyagiste et tour-opérateur insulaire affichant des engagements pour un tourisme responsable avec une Charte RSE interne.",
+            engagements: ["Zéro plastique à usage unique", "Soutien aux producteurs locaux", "Réduction d'empreinte", "Collaboration avec artisans corses"],
+            url: "https://www.corsicatours.com/nos-engagements-pour-un-tourisme-responsable"
+        },
+        {
+            name: "Domaine de Murtoli",
+            location: "Sartène",
+            description: "Vaste domaine agrotouristique familial (hôtellerie de charme) conciliant agriculture biologique et tourisme durable. 90% des 2500 ha consacrés à la nature protégée avec certification RSE et ISO 26000.",
+            engagements: ["Production locale des aliments", "100% parcelles en bio", "Tri sélectif et compostage", "Fonds de dotation pour la biodiversité corse"],
+            url: "https://www.tendancehotellerie.fr/articles-breves/communique-de-presse/22688-article/le-domaine-de-murtoli-renforce-son-engagement-en-faveur-d-un-developpement-ecoresponsable"
+        }
+    ],
+    batiment: [
+        {
+            name: "Holdmat Corsica (Socotra BTP & Béton di Corsica)",
+            location: "Corse du Sud et Haute-Corse",
+            description: "Entreprise insulaire de construction et production de béton innovant pour construire l'avenir durable tout en respectant les valeurs du passé.",
+            engagements: ["Label EnVol (2018)", "Protection de l'environnement et biodiversité", "Pratiques durables dans tous les projets"],
+            url: "https://holdmat.corsica/"
+        }
+    ],
+    services: [
+        {
+            name: "CG Consulting / RSE Corsica",
+            location: "Ajaccio",
+            description: "Cabinet de conseil en développement durable et RSE accompagnant les entreprises corses dans leurs démarches de labellisation RSE (labels Lucie, Engagé RSE conforme ISO 26000).",
+            engagements: ["Accompagnement labellisation RSE", "Formation ISO 26000", "Conseil en développement durable"],
+            url: "https://rse.corsica/"
+        },
+        {
+            name: "Co'R.S.E. Conseil",
+            location: "Cervione, Corse",
+            description: "Cabinet de conseil RSE dédié à l'assistance aux entreprises et organisations locales dans l'intégration et l'amélioration de leurs stratégies de développement durable et de RSE.",
+            engagements: ["Diagnostics ISO 26000", "Plans d'action RSE", "Bilans carbone", "Préparation aux labels AFNOR, LUCIE"],
+            url: "https://corseconseil.com/"
+        }
+    ],
+    agriculture: [
+        {
+            name: "Brasserie Pietra",
+            location: "Furiani (Corsica Beverage Company)",
+            description: "Producteur de bières artisanales corses valorisant les ressources locales (châtaigne) et le respect de l'environnement. Marque EnVol depuis 2010.",
+            engagements: ["Récupération de 80 tonnes/an de CO₂", "Réduction de 50% de consommation d'eau par litre", "Économie d'énergie", "Gestion des déchets"],
+            url: "https://www.brasseriepietra.corsica/biere-corse-pietra/en-savoir-plus-eco-citoyenne.php"
+        },
+        {
+            name: "CANC – Coopérative Agricole du Nord de la Corse",
+            location: "Casamozza",
+            description: "Coopérative de conditionnement de fruits et légumes engagée dans le développement durable avec tous ses adhérents dans une agriculture raisonnée.",
+            engagements: ["Gestion des ressources naturelles", "Réduction des pesticides", "Conditions de travail équitables", "Certifications GlobalGap, HVE, IFS, BIO"],
+            url: "https://canc-corse.com/developpement-durable-canc-corse/"
+        }
+    ],
+    sante: [
+        {
+            name: "Hôpital Privé Sud Corse (HPSC)",
+            location: "Ajaccio",
+            description: "Établissement de santé privé moderne éco-responsable avec une politique RSE intégrant les 7 piliers de l'ISO 26000 depuis 2019.",
+            engagements: ["Cuisine sur place avec produits locaux/bio", "Suppression des bouteilles d'eau", "Tri et limitation des emballages", "Diffusion numérique de l'information"],
+            url: "https://hpsc.corsica/developpement-durable-et-rse/"
+        }
+    ],
+    transport: [
+        {
+            name: "Air Corsica",
+            location: "Ajaccio",
+            description: "Compagnie aérienne régionale, 4ème plus grande entreprise de Corse, avec le plan RSE « Ambizione 2025 » couvrant culture partagée, performance environnementale et engagement sociétal.",
+            engagements: ["Flotte 85% neuve en 2024", "Objectif –16% émissions CO₂ d'ici 2025", "Tri des déchets à bord et au sol", "Emploi local et formation"],
+            url: "https://www.aircorsica.com/flights/the-company/csr"
+        },
+        {
+            name: "CORSICA linea",
+            location: "Bastia",
+            description: "Compagnie maritime régionale avec une politique environnementale volontariste et le label Green Marine Europe depuis 2020.",
+            engagements: ["Élimination des plastiques à bord", "Transition vers le GNL", "Branchement électrique à quai", "Protection des écosystèmes marins"],
+            url: "https://www.corsicalinea.com/nos-engagements/nos-engagements-adn-de-la-compagnie/transition-energetique/notre-politique-environnementale"
+        }
+    ],
+    // Secteurs sans entreprises spécifiques connues - on affiche les meilleures de tous secteurs
+    commerce: [],
+    artisanat: [],
+    industrie: [],
+    numerique: [],
+    autre: []
+};
+
+// Top 5 entreprises pour "autre" ou secteurs sans données
+const topEntreprisesRSE = [
+    entreprisesRSE.tourisme[4], // Domaine de Murtoli - exemplaire
+    entreprisesRSE.transport[0], // Air Corsica
+    entreprisesRSE.agriculture[0], // Brasserie Pietra
+    entreprisesRSE.sante[0], // HPSC
+    entreprisesRSE.batiment[0] // Holdmat
+];
+
 // Quiz Data - Questions organisées par catégorie ISO 26000
 const quizData = {
     categories: [
@@ -552,6 +674,7 @@ function updateNavigation() {
 function submitQuiz() {
     const results = calculateResults();
     renderResults(results);
+    renderEntreprisesRSE();
     
     quizQuestions.hidden = true;
     quizResults.hidden = false;
@@ -900,6 +1023,53 @@ function shareResults() {
             alert('Résultat copié dans le presse-papier !');
         });
     }
+}
+
+// Render entreprises RSE based on sector
+function renderEntreprisesRSE() {
+    const sector = companyInfo.sector;
+    const entreprisesContainer = document.getElementById('entreprises-rse-list');
+    const entreprisesSection = document.getElementById('entreprises-rse-section');
+    
+    if (!entreprisesContainer || !entreprisesSection) return;
+    
+    // Get entreprises for the sector
+    let entreprises = entreprisesRSE[sector] || [];
+    let sectionTitle = `Entreprises corses engagées en RSE dans votre secteur`;
+    let introText = `Inspirez-vous de ces entreprises locales qui ont déjà intégré la RSE et la norme ISO 26000 dans leurs pratiques.`;
+    
+    // If no entreprises for the sector or "autre", show top 5
+    if (entreprises.length === 0) {
+        entreprises = topEntreprisesRSE;
+        sectionTitle = `Entreprises corses exemplaires en RSE (ISO 26000)`;
+        introText = `Découvrez ces entreprises locales de différents secteurs qui ont déjà intégré la RSE et la norme ISO 26000 dans leurs pratiques. Elles peuvent vous inspirer quelle que soit votre activité.`;
+    }
+    
+    // Update section title and intro
+    const titleEl = entreprisesSection.querySelector('h2');
+    const introEl = entreprisesSection.querySelector('.entreprises-intro');
+    if (titleEl) titleEl.textContent = `🏢 ${sectionTitle}`;
+    if (introEl) introEl.textContent = introText;
+    
+    // Render entreprises cards
+    entreprisesContainer.innerHTML = entreprises.map(ent => `
+        <div class="entreprise-rse-card">
+            <div class="entreprise-header">
+                <h3 class="entreprise-name">${ent.name}</h3>
+                <span class="entreprise-location">📍 ${ent.location}</span>
+            </div>
+            <p class="entreprise-description">${ent.description}</p>
+            <div class="entreprise-engagements">
+                <strong>Engagements RSE :</strong>
+                <ul>
+                    ${ent.engagements.map(eng => `<li>${eng}</li>`).join('')}
+                </ul>
+            </div>
+            <a href="${ent.url}" target="_blank" rel="noopener noreferrer" class="entreprise-link btn btn-secondary">
+                En savoir plus →
+            </a>
+        </div>
+    `).join('');
 }
 
 // Initialize on DOM ready

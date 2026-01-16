@@ -230,6 +230,15 @@
                         </div>
                     </div>
 
+                    <!-- Section Entreprises Corses RSE -->
+                    <div id="entreprises-rse-section" class="entreprises-rse-section">
+                        <h2>🏢 Entreprises corses engagées en RSE dans votre secteur</h2>
+                        <p class="entreprises-intro">Inspirez-vous de ces entreprises locales qui ont déjà intégré la RSE et la norme ISO 26000 dans leurs pratiques.</p>
+                        <div id="entreprises-rse-list" class="entreprises-rse-list">
+                            <!-- Entreprises will be inserted here by JS -->
+                        </div>
+                    </div>
+
                     <div class="results-actions">
                         <button id="btn-restart" class="btn btn-secondary">
                             🔄 Refaire le diagnostic
@@ -308,7 +317,18 @@
             <div id="chatbot-messages" class="chatbot-messages" role="log" aria-live="polite">
                 <!-- Messages will be inserted here -->
             </div>
+            <!-- Zone de prévisualisation des fichiers uploadés -->
+            <div id="chatbot-file-preview" class="chatbot-file-preview" hidden>
+                <div class="file-preview-content">
+                    <span id="file-preview-name" class="file-preview-name"></span>
+                    <button type="button" id="file-preview-remove" class="file-preview-remove" aria-label="Supprimer le fichier">✕</button>
+                </div>
+            </div>
             <form id="chatbot-form" class="chatbot-form">
+                <input type="file" id="chatbot-file-input" class="chatbot-file-input" accept=".pdf,image/*" aria-label="Importer un document" hidden>
+                <button type="button" id="chatbot-upload-btn" class="chatbot-upload-btn" aria-label="Importer un appel d'offre (PDF ou image)" title="Analyser un appel d'offre">
+                    <span>📎</span>
+                </button>
                 <input type="text" id="chatbot-input" class="chatbot-input" placeholder="Tapez votre question..." aria-label="Votre message" autocomplete="off">
                 <button type="submit" class="chatbot-send" aria-label="Envoyer">
                     <span>➤</span>
