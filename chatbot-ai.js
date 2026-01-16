@@ -322,9 +322,21 @@ async function handleFileSelect(e) {
     }
     
     // Check file type
-    const validTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-    if (!validTypes.includes(file.type)) {
-        addMessage("⚠️ Format non supporté. Utilisez un PDF ou une image (JPG, PNG, GIF, WebP).", 'bot');
+    const validTypes = [
+        'application/pdf', 
+        'image/jpeg', 
+        'image/png', 
+        'image/gif', 
+        'image/webp',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
+        'application/msword' // .doc
+    ];
+    
+    // Also check by extension for DOCX
+    const isDocx = file.name.toLowerCase().endsWith('.docx') || file.name.toLowerCase().endsWith('.doc');
+    
+    if (!validTypes.includes(file.type) && !isDocx) {
+        addMessage("⚠️ Format non supporté. Utilisez un fichier Word (.docx), PDF ou une image (JPG, PNG).", 'bot');
         chatbotFileInput.value = '';
         return;
     }
@@ -333,9 +345,17 @@ async function handleFileSelect(e) {
     
     // Show preview
     if (chatbotFilePreview && filePreviewName) {
-        const icon = file.type === 'application/pdf' ? '📄' : '🖼️';
+        let icon = '📄';
+        if (file.type.startsWith('image/')) icon = '🖼️';
+        else if (isDocx || file.type.includes('word')) icon = '📝';
         filePreviewName.textContent = `${icon} ${file.name}`;
         chatbotFilePreview.hidden = false;
+    }
+    
+    // Handle DOCX files - extract text
+    if (isDocx || file.type.includes('word') || file.type.includes('openxmlformats')) {
+        await handleDocxFile(file);
+        return;
     }
     
     // Convert to base64
@@ -379,6 +399,163 @@ function convertFileToBase64(file) {
         reader.onerror = reject;
         reader.readAsDataURL(file);
     });
+}
+
+// Handle DOCX file - extract text and analyze
+async function handleDocxFile(file) {
+    addMessage(`📝 Analyse du document "${file.name}" en cours...`, 'bot');
+    showTyping();
+    
+    try {
+        const text = await extractTextFromDocx(file);
+        
+        if (!text || text.trim().length < 50) {
+            hideTyping();
+            addMessage("⚠️ Le document semble vide ou contient très peu de texte. Veuillez vérifier le fichier.", 'bot');
+            clearUploadedFile();
+            return;
+        }
+        
+        // Analyze the extracted text with AI
+        await analyzeDocumentText(text, file.name);
+        
+    } catch (error) {
+        hideTyping();
+        console.error('Error processing DOCX:', error);
+        addMessage("⚠️ Erreur lors de la lecture du document Word. Veuillez réessayer ou copier-coller le texte directement.", 'bot');
+    }
+    
+    clearUploadedFile();
+}
+
+// Extract text from DOCX file (DOCX is a ZIP containing XML)
+async function extractTextFromDocx(file) {
+    const JSZip = window.JSZip;
+    
+    if (!JSZip) {
+        // Load JSZip dynamically if not available
+        await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js');
+    }
+    
+    const arrayBuffer = await file.arrayBuffer();
+    const zip = await JSZip.loadAsync(arrayBuffer);
+    
+    // DOCX stores main content in word/document.xml
+    const documentXml = await zip.file('word/document.xml')?.async('string');
+    
+    if (!documentXml) {
+        throw new Error('Could not find document.xml in DOCX');
+    }
+    
+    // Parse XML and extract text
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(documentXml, 'application/xml');
+    
+    // Get all text elements (w:t tags contain the text)
+    const textElements = xmlDoc.getElementsByTagName('w:t');
+    let fullText = '';
+    
+    for (let i = 0; i < textElements.length; i++) {
+        fullText += textElements[i].textContent;
+        // Add space between elements, newline after certain patterns
+        if (i < textElements.length - 1) {
+            fullText += ' ';
+        }
+    }
+    
+    // Clean up the text
+    fullText = fullText.replace(/\s+/g, ' ').trim();
+    
+    return fullText;
+}
+
+// Load external script dynamically
+function loadScript(src) {
+    return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = src;
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+    });
+}
+
+// Analyze document text with AI
+async function analyzeDocumentText(text, filename) {
+    try {
+        if (GROQ_API_KEY === 'YOUR_GROQ_API_KEY') {
+            hideTyping();
+            addMessage("⚠️ Le chatbot IA n'est pas configuré. Configurez la clé API Groq pour analyser les documents.", 'bot');
+            return;
+        }
+        
+        // Truncate text if too long (keep first 8000 chars)
+        const truncatedText = text.length > 8000 ? text.substring(0, 8000) + '...[document tronqué]' : text;
+        
+        const analysisPrompt = `Analyse ce document d'appel d'offre et identifie tous les éléments RSE.
+
+## DOCUMENT : ${filename}
+${truncatedText}
+
+## TA MISSION
+Analyse ce texte et fournis :
+
+### 📋 **CRITÈRES RSE DÉTECTÉS**
+Liste tous les critères RSE/développement durable mentionnés avec leur pondération si indiquée.
+
+### ✅ **CE QUE L'ENTREPRISE PEUT PROBABLEMENT DÉJÀ COCHER**
+Pour chaque critère trouvé, indique ce qu'une TPE/PME corse peut généralement déjà justifier.
+
+### 🎯 **AXES D'AMÉLIORATION RAPIDES**
+Actions concrètes réalisables avant la date limite, avec délai et coût estimé.
+
+### 📄 **DOCUMENTS À PRÉPARER**
+Liste des pièces justificatives RSE à inclure dans la réponse.
+
+### 💡 **CONSEIL STRATÉGIQUE**
+Un conseil clé pour maximiser les points RSE.
+
+Si le document ne semble pas être un appel d'offre ou ne contient pas de critères RSE, indique-le clairement et propose ton aide autrement.`;
+
+        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${GROQ_API_KEY}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                model: 'llama-3.3-70b-versatile',
+                messages: [
+                    { role: 'system', content: RSE_SYSTEM_PROMPT },
+                    { role: 'user', content: analysisPrompt }
+                ],
+                temperature: 0.3,
+                max_tokens: 2048
+            })
+        });
+        
+        hideTyping();
+        
+        if (!response.ok) {
+            throw new Error('API request failed');
+        }
+        
+        const data = await response.json();
+        const analysis = data.choices[0].message.content;
+        
+        addMessage(analysis, 'bot');
+        
+        // Add to conversation history
+        conversationHistory.push(
+            { role: 'user', content: `Analyse ce document d'appel d'offre: ${filename}` },
+            { role: 'assistant', content: analysis }
+        );
+        
+    } catch (error) {
+        hideTyping();
+        console.error('Document analysis error:', error);
+        addMessage("⚠️ Erreur lors de l'analyse. Veuillez réessayer.", 'bot');
+    }
 }
 
 // Add analysis suggestion button
