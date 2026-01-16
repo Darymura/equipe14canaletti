@@ -204,8 +204,8 @@ ul, ol {
 }
 
 .logo-img {
-    width: 64px;
-    height: 64px;
+    width: 200%;
+    height: 200%;
     object-fit: contain;
 }
 
