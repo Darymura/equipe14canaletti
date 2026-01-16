@@ -14,8 +14,11 @@
 // ⚠️ REMPLACEZ PAR VOTRE CLÉ API GROQ (gratuite sur console.groq.com)
 const GROQ_API_KEY = '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';
 
-// API endpoint - using CORS proxy for browser compatibility
-const GROQ_API_URL = 'https://corsproxy.io/?' + encodeURIComponent('https://api.groq.com/openai/v1/chat/completions');
+// API endpoint - CORS proxy disabled for now, using local analysis
+const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
+
+// Flag to use local analysis instead of API (set to true for GitHub Pages)
+const USE_LOCAL_ANALYSIS = true;
 
 // State pour l'upload de fichiers
 let uploadedFile = null;
@@ -898,6 +901,13 @@ Explique comment utiliser ces atouts RSE :
         
         // Show typing indicator
         showTyping();
+        
+        // Use local analysis for GitHub Pages (no CORS issues)
+        if (USE_LOCAL_ANALYSIS) {
+            hideTyping();
+            generateLocalQuizAnalysis(results, companyInfo, criteriaExcellent, criteriaMet, criteriaToImprove, strongAreas, weakAreas);
+            return;
+        }
         
         // Check if API key is configured
         if (GROQ_API_KEY === 'YOUR_GROQ_API_KEY') {
