@@ -588,7 +588,7 @@ function toggleChatbot() {
     
     if (!isExpanded && !chatbotInitialized) {
         // First open: show greeting
-        addMessage("Bonjour ! 👋 Je suis **Stella**, votre assistante RSE. Je peux vous aider à :\n\n• Comprendre la RSE et la norme ISO 26000\n• Vous accompagner dans votre démarche responsable\n• **Analyser vos appels d'offre** : copiez-collez les critères RSE d'un appel d'offre et je vous dirai quels critères vous pouvez déjà cocher !\n\nQue souhaitez-vous savoir ?", 'bot');
+        addMessage("Bonjour ! 👋 Je suis **Stella**, votre assistante RSE. Je peux vous aider à :\n\n• Comprendre la RSE et la norme ISO 26000\n• Vous accompagner dans votre démarche responsable\n• **Analyser vos appels d'offre** : importez votre fichier Word (.docx) via 📎 ou copiez-collez le texte, et je vous dirai quels critères RSE vous pouvez déjà cocher !\n\nQue souhaitez-vous savoir ?", 'bot');
         chatbotInitialized = true;
     }
     
