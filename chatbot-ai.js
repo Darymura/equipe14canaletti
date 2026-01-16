@@ -655,11 +655,16 @@ Génère un feedback de 250-350 mots MAXIMUM structuré ainsi :
         
         addMessage(feedback, 'bot');
         
+        // Add file upload suggestion after a short delay
+        setTimeout(() => {
+            addMessage("📎 **Astuce** : Vous avez un appel d'offre à venir ? Cliquez sur le bouton 📎 ci-dessous pour importer votre document (PDF ou image) et je vous dirai quels critères RSE vous pouvez déjà cocher et comment vous améliorer pour maximiser vos chances !", 'bot');
+        }, 1500);
+        
     } catch (error) {
         hideTyping();
         console.error('Feedback generation error:', error);
         // Fallback message
-        addMessage(`🎉 **Félicitations pour avoir complété le quiz !**\n\nVotre score : **${results.totalScore}%** - Niveau **${results.maturityLevel.level}**\n\n${results.maturityLevel.description}\n\nN'hésitez pas à me poser des questions sur vos résultats ou sur comment améliorer votre démarche RSE !`, 'bot');
+        addMessage(`🎉 **Félicitations pour avoir complété le quiz !**\n\nVotre score : **${results.totalScore}%** - Niveau **${results.maturityLevel.level}**\n\n${results.maturityLevel.description}\n\nN'hésitez pas à me poser des questions sur vos résultats ou sur comment améliorer votre démarche RSE !\n\n📎 **Astuce** : Vous pouvez aussi importer un appel d'offre (PDF ou image) en cliquant sur 📎 et je vous dirai quels critères RSE vous pouvez cocher !`, 'bot');
     }
 }
 
