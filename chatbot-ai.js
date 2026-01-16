@@ -253,11 +253,19 @@ function initChatbot() {
     
     // File upload event listeners
     if (chatbotUploadBtn && chatbotFileInput) {
-        chatbotUploadBtn.addEventListener('click', () => chatbotFileInput.click());
+        console.log('File upload button initialized');
+        chatbotUploadBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Upload button clicked');
+            chatbotFileInput.click();
+        });
         chatbotFileInput.addEventListener('change', handleFileSelect);
         if (filePreviewRemove) {
             filePreviewRemove.addEventListener('click', clearUploadedFile);
         }
+    } else {
+        console.warn('File upload elements not found:', { chatbotUploadBtn, chatbotFileInput });
     }
     
     // Suggestion chips
@@ -373,7 +381,7 @@ function toggleChatbot() {
     
     if (!isExpanded && !chatbotInitialized) {
         // First open: show greeting
-        addMessage("Bonjour ! 👋 Je suis votre assistant RSE. Je peux vous aider à comprendre la RSE, la norme ISO 26000, et vous accompagner dans votre démarche responsable. Que souhaitez-vous savoir ?", 'bot');
+        addMessage("Bonjour ! 👋 Je suis votre assistant RSE. Je peux vous aider à :\n\n• Comprendre la RSE et la norme ISO 26000\n• Vous accompagner dans votre démarche responsable\n• **Analyser vos appels d'offre** : cliquez sur 📎 pour importer un document (PDF ou image) et je vous dirai quels critères RSE vous pouvez déjà cocher !\n\nQue souhaitez-vous savoir ?", 'bot');
         chatbotInitialized = true;
     }
     
