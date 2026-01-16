@@ -1779,11 +1779,22 @@ ul, ol {
     display: flex;
     align-items: center;
     justify-content: center;
+    animation: chatbot-float 3s ease-in-out infinite;
+}
+
+@keyframes chatbot-float {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-8px);
+    }
 }
 
 .chatbot-toggle:hover {
-    transform: scale(1.05);
+    transform: scale(1.05) translateY(-4px);
     box-shadow: var(--shadow-xl);
+    animation-play-state: paused;
 }
 
 .chatbot-icon,
