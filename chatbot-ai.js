@@ -321,22 +321,24 @@ async function handleFileSelect(e) {
         return;
     }
     
-    // Check file type
+    // Check file type - only text-based formats
     const validTypes = [
-        'application/pdf', 
-        'image/jpeg', 
-        'image/png', 
-        'image/gif', 
-        'image/webp',
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
-        'application/msword' // .doc
+        'application/msword', // .doc
+        'text/plain', // .txt
+        'text/rtf', // .rtf
+        'application/rtf'
     ];
     
-    // Also check by extension for DOCX
-    const isDocx = file.name.toLowerCase().endsWith('.docx') || file.name.toLowerCase().endsWith('.doc');
+    // Check by extension
+    const fileName = file.name.toLowerCase();
+    const isDocx = fileName.endsWith('.docx') || fileName.endsWith('.doc');
+    const isTxt = fileName.endsWith('.txt');
+    const isRtf = fileName.endsWith('.rtf');
+    const isValidExtension = isDocx || isTxt || isRtf;
     
-    if (!validTypes.includes(file.type) && !isDocx) {
-        addMessage("⚠️ Format non supporté. Utilisez un fichier Word (.docx), PDF ou une image (JPG, PNG).", 'bot');
+    if (!validTypes.includes(file.type) && !isValidExtension) {
+        addMessage("⚠️ Format non supporté. Utilisez un fichier **Word (.docx)** ou **texte (.txt)**.", 'bot');
         chatbotFileInput.value = '';
         return;
     }
@@ -345,9 +347,8 @@ async function handleFileSelect(e) {
     
     // Show preview
     if (chatbotFilePreview && filePreviewName) {
-        let icon = '📄';
-        if (file.type.startsWith('image/')) icon = '🖼️';
-        else if (isDocx || file.type.includes('word')) icon = '📝';
+        let icon = '📝';
+        if (isTxt) icon = '📄';
         filePreviewName.textContent = `${icon} ${file.name}`;
         chatbotFilePreview.hidden = false;
     }
@@ -358,37 +359,45 @@ async function handleFileSelect(e) {
         return;
     }
     
-    // Convert to base64
-    try {
-        if (file.type === 'application/pdf') {
-            // For PDF, we'll extract text or convert to image
-            uploadedFileBase64 = await convertFileToBase64(file);
-        } else {
-            // For images, convert directly
-            uploadedFileBase64 = await convertFileToBase64(file);
-        }
-        
-        // Since vision API is not reliably available, guide user to paste text
-        addMessage(`📎 Fichier "${file.name}" reçu.
-
-⚠️ **Note** : L'analyse automatique d'images n'est pas disponible actuellement.
-
-✅ **Pour analyser votre appel d'offre, copiez-collez le texte** des sections suivantes dans le chat :
-- Les **critères d'attribution** (et leur pondération)
-- Les **clauses RSE/environnementales**
-- Le **type de marché** (travaux, services, fournitures)
-
-Je pourrai alors vous dire quels critères vous pouvez déjà cocher et comment vous améliorer ! 💡`, 'bot');
-        
-        clearUploadedFile();
-    } catch (error) {
-        console.error('Error processing file:', error);
-        addMessage("⚠️ Erreur lors du traitement du fichier. Veuillez réessayer.", 'bot');
-        clearUploadedFile();
+    // Handle plain text files (.txt, .rtf)
+    if (isTxt || isRtf || file.type.startsWith('text/')) {
+        await handleTextFile(file);
+        return;
     }
+    
+    // Fallback - shouldn't reach here
+    addMessage("⚠️ Format non reconnu. Veuillez utiliser un fichier Word (.docx) ou texte (.txt).", 'bot');
+    clearUploadedFile();
 }
 
-// Convert file to base64
+// Handle plain text file
+async function handleTextFile(file) {
+    addMessage(`📄 Analyse du document "${file.name}" en cours...`, 'bot');
+    showTyping();
+    
+    try {
+        const text = await file.text();
+        
+        if (!text || text.trim().length < 50) {
+            hideTyping();
+            addMessage("⚠️ Le document semble vide ou contient très peu de texte. Veuillez vérifier le fichier.", 'bot');
+            clearUploadedFile();
+            return;
+        }
+        
+        // Analyze the extracted text with AI
+        await analyzeDocumentText(text, file.name);
+        
+    } catch (error) {
+        hideTyping();
+        console.error('Error processing text file:', error);
+        addMessage("⚠️ Erreur lors de la lecture du fichier. Veuillez réessayer.", 'bot');
+    }
+    
+    clearUploadedFile();
+}
+
+// Convert file to base64 (kept for potential future use)
 function convertFileToBase64(file) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -944,169 +953,15 @@ async function analyzeUploadedDocument() {
         addMessage(`⚠️ **Erreur lors de l'analyse du document.**
 
 Cela peut être dû à :
-- Une image trop grande ou de mauvaise qualité
-- Un format non supporté
+- Un fichier corrompu ou mal formaté
 - Une surcharge temporaire du service
 
 ### Alternatives :
-1. **Réessayez** avec une image plus petite ou plus nette
-2. **Décrivez-moi** le contenu de votre appel d'offre dans le chat
-3. **Copiez-collez** les sections RSE du document
+1. **Réessayez** avec un autre fichier Word (.docx)
+2. **Copiez-collez** le texte directement dans le chat
+3. **Décrivez-moi** le contenu de votre appel d'offre
 
 Je reste disponible pour vous aider ! 💬`, 'bot');
         clearUploadedFile();
     }
-}
-
-// Analyze PDF document
-async function analyzePDFDocument() {
-    // For PDF, we'll try to use the vision model with the base64 data
-    // If that doesn't work, we'll provide guidance
-    
-    try {
-        // Try using llama-3.2-90b-vision-preview which supports documents
-        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${GROQ_API_KEY}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                model: 'llama-3.2-90b-vision-preview',
-                messages: [
-                    {
-                        role: 'user',
-                        content: [
-                            {
-                                type: 'text',
-                                text: APPEL_OFFRE_ANALYSIS_PROMPT + "\n\nAnalyse ce document d'appel d'offre et identifie tous les critères RSE mentionnés."
-                            },
-                            {
-                                type: 'image_url',
-                                image_url: {
-                                    url: `data:application/pdf;base64,${uploadedFileBase64}`
-                                }
-                            }
-                        ]
-                    }
-                ],
-                temperature: 0.3,
-                max_tokens: 2048
-            })
-        });
-        
-        if (response.ok) {
-            const data = await response.json();
-            return data.choices[0].message.content;
-        }
-    } catch (e) {
-        console.log('Vision API failed for PDF, using fallback');
-    }
-    
-    // Fallback: provide guidance for PDF
-    return `📄 **Analyse de PDF**
-
-Je ne peux pas lire directement les fichiers PDF. Voici comment procéder :
-
-### Option 1 : Convertir en image
-1. Ouvrez votre PDF
-2. Faites une capture d'écran des pages importantes
-3. Uploadez l'image ici
-
-### Option 2 : Copier-coller le texte
-Copiez les sections RSE de votre appel d'offre et collez-les dans le chat.
-
-### Option 3 : Me décrire l'appel d'offre
-Dites-moi :
-- Le type de marché (travaux, services, fournitures)
-- Le secteur d'activité
-- Les critères RSE mentionnés
-
-💡 **Conseil** : Les critères RSE se trouvent généralement dans :
-- Le règlement de consultation (RC)
-- Les critères d'attribution (souvent 5-15% de la note)
-- Les clauses sociales et environnementales du CCAP`;
-}
-
-// Analyze image document using vision API
-async function analyzeImageDocument() {
-    // Try multiple vision models in case one is unavailable
-    const visionModels = [
-        'llama-3.2-90b-vision-preview',
-        'llama-3.2-11b-vision-preview',
-        'llava-v1.5-7b-4096-preview'
-    ];
-    
-    let lastError = null;
-    
-    for (const model of visionModels) {
-        try {
-            console.log(`Trying vision model: ${model}`);
-            const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${GROQ_API_KEY}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    model: model,
-                    messages: [
-                        {
-                            role: 'user',
-                            content: [
-                                {
-                                    type: 'text',
-                                    text: APPEL_OFFRE_ANALYSIS_PROMPT + "\n\nAnalyse cette image d'appel d'offre et identifie tous les critères RSE mentionnés. Si l'image n'est pas lisible ou ne contient pas d'appel d'offre, indique-le clairement."
-                                },
-                                {
-                                    type: 'image_url',
-                                    image_url: {
-                                        url: `data:${uploadedFile.type};base64,${uploadedFileBase64}`
-                                    }
-                                }
-                            ]
-                        }
-                    ],
-                    temperature: 0.3,
-                    max_tokens: 2048
-                })
-            });
-            
-            if (response.ok) {
-                const data = await response.json();
-                return data.choices[0].message.content;
-            } else {
-                const errorData = await response.json();
-                lastError = errorData.error?.message || `Model ${model} failed`;
-                console.warn(`Model ${model} failed:`, lastError);
-            }
-        } catch (e) {
-            lastError = e.message;
-            console.warn(`Error with model ${model}:`, e);
-        }
-    }
-    
-    // If all vision models fail, provide fallback
-    console.error('All vision models failed. Last error:', lastError);
-    return `⚠️ **L'analyse d'image n'est pas disponible actuellement.**
-
-En attendant, voici comment je peux vous aider :
-
-### Option 1 : Décrivez-moi l'appel d'offre
-Copiez-collez ou décrivez les sections suivantes :
-- Les critères d'attribution et leur pondération
-- Les clauses RSE/environnementales mentionnées
-- Le type de marché (travaux, services, fournitures)
-
-### Option 2 : Posez-moi des questions
-Demandez-moi par exemple :
-- "Quels critères RSE sont généralement demandés dans les appels d'offre BTP ?"
-- "Comment améliorer mon score RSE pour un marché public ?"
-
-### Critères RSE courants dans les appels d'offre :
-📌 **Environnement** (5-10% de la note) : Bilan carbone, gestion déchets, énergies renouvelables
-📌 **Social** (5-10%) : Insertion, formation, sécurité au travail
-📌 **Gouvernance** : Charte éthique, achats responsables
-
-💡 Je reste disponible pour vous conseiller !`;
 }
