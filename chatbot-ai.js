@@ -1,18 +1,7 @@
-/**
- * Chatbot RSE avec IA - Groq API (Gratuit)
- * Mutuelle de Corse - Accompagnement RSE
- * 
- * INSTRUCTIONS:
- * 1. Créez un compte gratuit sur https://console.groq.com
- * 2. Générez une API key
- * 3. Remplacez 'YOUR_GROQ_API_KEY' ci-dessous
- * 
- * NOTE: Pour la production, la clé API devrait être sur un backend sécurisé.
- * Cette implémentation est pour un POC/démonstration uniquement.
- */
 
-// ⚠️ REMPLACEZ PAR VOTRE CLÉ API GROQ (gratuite sur console.groq.com)
-const GROQ_API_KEY = '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';
+
+// ⚠️ REMPLACEZ PAR VOTRE CLÉ API GROQ
+const GROQ_API_KEY = 'blank';
 
 // API endpoint - CORS proxy disabled for now, using local analysis
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
@@ -1244,3 +1233,4 @@ Je reste disponible pour vous aider ! 💬`, 'bot');
         clearUploadedFile();
     }
 }
+
